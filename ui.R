@@ -5,25 +5,8 @@
 # http://shiny.rstudio.com
 #
 
-listOfNames <- as.list(c("blabla"="321", "antoine.lizee"="684"))
-listOfSkills <- list(c("R", "Python", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Frameworks", "Django", "SQL", "noSQL", "ruby", "ROR"),
-                     c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android"),
-                     c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats"))
-listOfDatasets <- list("Education" = c("01 - Help Teachers Get What They Need", 
-                                       "04 - Help Donors Choose Better Serve Teachers"),
-                       "Safety & Crime" = c("02 - Fight Child Sexual Exploitation", 
-                                            "05 - Help Police Prevent Domestic Violence",
-                                            "13 - Visualize 911 Service Calls & Police Reports"),
-                       "Environment" = c("06 - Parks and Rec",
-                                         "09 - Predicting Climate Threats"),
-                       "Healthcare" = c("08 - Prepare California for Elderly Health Needs",
-                                        "07 - Ebola – Mining Available Data"),
-                       "Industry" =c("03 - Reduce Accidents in Mines",
-                                     "10 - Assess Flood Risk of Roads and Airports",
-                                     "11 - Prevent Supertankers from Grounding",
-                                     "12 - Predict Whereabouts of Types of Fish"
-                       )
-)
+
+source("StaticVariables.R")
 
 library(shiny)
 
@@ -39,14 +22,21 @@ shinyUI(navbarPage(
                       hr(),
                       wellPanel(
                         h2("Login Info", align = "center"),
-                        helpText("Create a login or select one that you have already created."),
-                        selectizeInput(inputId = "Login", label = NULL, choices = c(list("Login" = ""), listOfNames), multiple = FALSE, options = list(create = "true")),
-                        helpText("Type the associated password (or create one). Use a Weak, non-important password, like the four random digits suggested below."),
-                        textInput(inputId = "Password", label = NULL, value = paste0(sample(9,4), collapse = "")) ,
-                        
-                        fluidRow(actionButton("b_Create", "Create Profile")),
-                        fluidRow(actionButton("b_Load", "Load Profile")), 
-                        fluidRow(actionButton("b_Update", "Update Profile"))
+                        helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
+                        #                         uiOutput("LoginField"), 
+                        selectizeInput(inputId = "s_Name", label = NULL, choices = c("Login" = "", "blou", "bli"), multiple = FALSE, options = list(create = "true")),
+                        helpText("Type the associated password (or create one). Use a Weak, non-important password."),
+                        textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
+                        hr(),
+                        fluidRow(actionButton("b_Create", "Create Profile"),
+                                 actionButton("b_Load", "Delete Profile")), 
+                        br(),
+                        fluidRow(actionButton("b_Load", "Load Profile"), 
+                                 actionButton("b_Update", "Update Profile")),
+                        textOutput("loginErrorCreate"),
+                        textOutput("loginErrorLoad"),
+                        textOutput("loginErrorDelte"),
+                        textOutput("loginErrorSave")
                       )),
                column(9,
                       fluidRow( 
@@ -87,11 +77,18 @@ shinyUI(navbarPage(
            )
   ),
   tabPanel("All Profiles",
-           h4("The database with all profiles is available", a(href = "www",  "here"))
+           h4("The database with all profiles is available", a(href = "www",  "here")),
+           hr(),
+           renderUI("AllProfiles1")
   ),
   tabPanel("Potential Teams"
   ),
   tabPanel("Debug",
-           verbatimTextOutput("DEBUG"))
+           verbatimTextOutput("DEBUG"),
+           textOutput("loginErrorLoad"),
+           textOutput("loginErrorCreate"),
+           textOutput("loginErrorDelete"),
+           textOutput("loginErrorSave")
+  )
 )
 )
