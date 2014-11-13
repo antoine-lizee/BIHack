@@ -48,7 +48,7 @@ shinyUI(navbarPage(
                         fluidRow(actionButton("b_Load", "Load Profile")), 
                         fluidRow(actionButton("b_Update", "Update Profile"))
                       )),
-               column(6,
+               column(9,
                       fluidRow( 
                         column(4, 
                                wellPanel(
@@ -71,14 +71,16 @@ shinyUI(navbarPage(
                       ),
                       hr(),
                       fluidRow(
-                        column(12,
-                               plotOutput("radarPlot")))),
-               column(3,
-                      p("Your Profie is:", align = "center"),
-                      h2(textOutput("Profile", inline = TRUE), align = "center"),
-                      wellPanel(
-                        selectInput(inputId = "s_Datasets", label = "Select the dataset(s) your are interesting to work on:", choices = listOfDatasets, multiple = TRUE),
-                        sliderInput("i_Involvement", label = "How much time do you intend to spend at the hackathon?", min = 1, max = 4, value = 2, step = 1 )
+                        column(8,
+                               plotOutput("radarPlot")),
+                        column(4,
+                               p("Your Profie is:", align = "center"),
+                               h2(textOutput("Profile", inline = TRUE), align = "center"),
+                               wellPanel(
+                                 selectInput(inputId = "s_Datasets", label = "Select the dataset(s) your are interesting to work on:", choices = listOfDatasets, multiple = TRUE),
+                                 sliderInput("i_Involvement", label = "How much time do you intend to spend at the hackathon?", min = 1, max = 4, value = 2, step = 1 )
+                               )
+                        )
                       )
                )
              )
