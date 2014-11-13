@@ -6,18 +6,27 @@
 #
 
 library(shiny)
+library(fmsb)
 
 shinyServer(function(input, output) {
-
-  output$distPlot <- renderPlot({
-
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2]
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white')
-
+  
+  data <- reactive({
+    data.frame(check.names = F,
+               "Data Science" = c(5,0,input$i_DS),
+               "Back-End" = c(5,0, input$i_BE),
+               "Front-End" = c(5,0,input$i_FE))
   })
-
+  
+  color <- reactive({
+    topo.colors(3)[which.max(data()[3,])]
+  })
+  
+  output$radarPlot <- renderPlot({
+    
+    # draw radar chart
+    radarchart(df = data(), axistype = 0, seg = 5, 
+               pcol = "black", pfcol = color())
+    
+  })
+  
 })
