@@ -65,12 +65,12 @@ shinyServer(function(input, output, session) {
   theta <- reactive({profile()[2]})
   output$Profile <- renderText({
     ifelse(r()<=1, "Balanced", 
-           ifelse(theta() < 0, "Front-End dev", 
+           ifelse(theta() < 0, "ERROR", 
                   ifelse(theta() < pi/3, "Data Viz guy",
                          ifelse(theta() < 2*pi/3, "Data Scientist",
                                 ifelse(theta() < pi, "Data dude",
                                        ifelse(theta() < 4*pi/3, "Back-End geek", 
-                                              ifelse(theta() < 5*pi/3,  "Full Stack dev", "ERROR")))))))
+                                              ifelse(theta() < 5*pi/3,  "Full Stack dev", "Front-End dev")))))))
   })
   
   ### Updates to the UI
