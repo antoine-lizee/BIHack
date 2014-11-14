@@ -52,8 +52,8 @@ userDBName <- "BIH_users.sqlite"
 userTableName <- "BIH_users"
 con <- RSQLite::dbConnect(SQLite(), userDBName, cache_size = 5000, synchronous = "full")
 if (!dbExistsTable(con, userTableName)) {
-  dbWriteTable(con, name = userTableName, value = user0[0,], row.names = F)
-  #   dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
+  dbWriteTable(con, name = userTableName, value = user0, row.names = F)
+    dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
 }
 # # Reset code:
 # dbDisconnect(con)
