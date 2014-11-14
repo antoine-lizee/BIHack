@@ -27,17 +27,28 @@ shinyUI(navbarPage(
                         helpText(paste0("Type the associated 'identifying token' that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
                         textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
-                        helpText("Select the action to perform from that info")
-                        actionButton("b_Create", "Create Profile"),
-                        textOutput("LoginErrorCreate"),
-                        actionButton("b_Load", "Load Profile"), 
-                        textOutput("LoginErrorLoad"),
-                        actionButton("b_Update", "Update Profile"),
-                        textOutput("LoginErrorUpdate"),
-                        actionButton("b_Delete", "Delete Profile"), 
-                        textOutput("LoginErrorDelete")
-                      )),
+                        helpText("Optional information to identify you better"),
+                        textInput(inputId = "s_FirstName", label = "First Name", ""),
+                        textInput(inputId = "s_LastName", label = "Last Name", "")
+                      )
+               ),
                column(9,
+                      fluidRow(
+                        wellPanel(
+                          column(3,fluidRow(
+                                 actionButton("b_Create", "Create Profile"),
+                                 textOutput("LoginErrorCreate"))),
+                          column(3,fluidRow(
+                                 actionButton("b_Load", "Load Profile"), 
+                                 textOutput("LoginErrorLoad"))),
+                          column(3,fluidRow(
+                                 actionButton("b_Update", "Update Profile"),
+                                 textOutput("LoginErrorUpdate"))),
+                          column(3,fluidRow(
+                                 actionButton("b_Delete", "Delete Profile"), 
+                                 textOutput("LoginErrorDelete")))
+                        )
+                      ),
                       fluidRow( 
                         column(4, 
                                wellPanel(

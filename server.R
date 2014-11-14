@@ -283,6 +283,8 @@ shinyServer(function(input, output, session) {
     }    
   })
   
+  ### All Profiles pane
+  
   ### Debugging
   output$DEBUG <- renderPrint({
     print(profile())
