@@ -15,7 +15,6 @@ library(rjson)
 
 source("StaticVariables.R")
 
-
 # Functions ---------------------------------------------------------------
 
 ## UTILITIES #######
@@ -53,7 +52,7 @@ userTableName <- "BIH_users"
 con <- RSQLite::dbConnect(SQLite(), userDBName, cache_size = 5000, synchronous = "full")
 if (!dbExistsTable(con, userTableName)) {
   dbWriteTable(con, name = userTableName, value = user0, row.names = F)
-    dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
+  dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
 }
 # # Reset code:
 # dbDisconnect(con)
@@ -107,6 +106,10 @@ getListOfUsers <- function() {
   dbGetQuery(con, paste("SELECT Name FROM", userTableName))[[1]]
 }
 
+getUserTable <- function() {
+  dbReadTable(con, userTableName)
+}
+
 
 
 # Server definition -------------------------------------------------------
@@ -117,12 +120,6 @@ shinyServer(function(input, output, session) {
   DS <- reactive({input$i_DS})
   BE <- reactive({input$i_BE})
   FE <- reactive({input$i_FE})
-  data <- reactive({
-    data.frame(check.names = F,
-               "Data Science" = c(5,0,DS()),
-               "Back-End" = c(5,0, BE()),
-               "Front-End" = c(5,0, FE()))
-  })
   
   User <- reactive({
     user <- user0
@@ -141,6 +138,13 @@ shinyServer(function(input, output, session) {
     return(user)
   })
   
+  plotData <- function(user){
+    data.frame(check.names = F,
+               "Data Science" = c(5,0,user[['DS']]),
+               "Back-End" = c(5,0, user[['BE']]),
+               "Front-End" = c(5,0, user[['FE']]))
+  }
+  
   ### PLOT
   color.bckp <- reactive({
     topo.colors(3)[which.max(data()[3,])]
@@ -150,7 +154,8 @@ shinyServer(function(input, output, session) {
   })
   output$radarPlot <- renderPlot({
     # draw radar chart
-    radarchart(df = data(), axistype = 0, seg = 5, 
+    par(mar = c(0,0,0,0))
+    radarchart(df = plotData(User()), axistype = 0, seg = 5, 
                pcol = "black", pfcol = color())
   })
   
@@ -165,7 +170,7 @@ shinyServer(function(input, output, session) {
   r <- reactive({profile()[1]})
   theta <- reactive({profile()[2]})
   output$Profile <- renderText({
-    ifelse((r()/max(data()[3,]))<=1/3, "Balanced", 
+    ifelse((r()/max(DS(), BE(), FE()))<=1/3, "Balanced", 
            ifelse(theta() < 0, "ERROR", 
                   ifelse(theta() < pi/3, "Data Viz guy",
                          ifelse(theta() < 2*pi/3, "Data Scientist",
@@ -177,7 +182,9 @@ shinyServer(function(input, output, session) {
   ### Updates to the UI
   #   
   output$LoginField <- renderUI(
-    selectizeInput(inputId = "s_Name", label = "Select or Create a pseudo below", choices = c("Login" = "", getListOfUsers()), multiple = FALSE, options = list(create = "true"))
+    selectizeInput(inputId = "s_Name", label = "Select or Create a pseudo below", 
+                   choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
+                   options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
   )
   
   output$textInvolvement <- reactive({
@@ -283,7 +290,7 @@ shinyServer(function(input, output, session) {
   
   ### All Profiles pane
   
-  users <- dbReadTable(con, userTableName)
+  users <- getUserTable()
   
   output$AllProfiles1 <- renderUI({
     users <<- dbReadTable(con, userTableName) # try to refresh
@@ -292,28 +299,28 @@ shinyServer(function(input, output, session) {
         column(2,
                h3(user['Name'], align = "center"),
                p(user['FirstName'],user['LastName'], align = "center")),
-#                fluidRow(column(6,
-#                                p(user['Name'])),
-#                         column(6,
-#                                p(user['Name'])))),
         column(4,
-               selectInput(paste0("bla", 1), label = "Datasets", choices = unname(substr(unlist(listOfDatasets),1,2)),selected = substr(fromJSON(user[["Datasets"]]), 1, 2), multiple = TRUE)),
-#         column(3,
-#                plotOutput(paste0("plot", user['Name']), height = "100px")),
+               selectInput(paste0("bla", 1), label = "Datasets", 
+                           choices = unname(substr(unlist(listOfDatasets),1,2)), selected = substr(fromJSON(user[["Datasets"]]), 1, 2), multiple = TRUE)),
         column(3,
-                h2("..."))
-        ),
+               plotOutput(paste0("plot", user['Name']), height = "100px")),
+        column(3,
+               h2("..."))
+      ),
       hr()
       )
     }))
-
-    output[paste0("plot", users[['Name']])] <- lapply(users[['Name']], function(userName) {
-      return(renderPlot(
-      radarchart(df = data(), axistype = 0, seg = 5, 
-                 pcol = "black", pfcol = color())
-      ))})
-
   })
+  
+  users <- getUserTable()
+  for (i_user in 1:nrow(users)) {
+    user <- users[i_user, ]
+    output[[paste0("plot", user['Name'])]] <- renderPlot({
+      par(mar = c(0,0,0,0))
+      radarchart(df = plotData(user), axistype = 0, seg = 5, 
+                 pcol = "black", pfcol = color())
+    })
+  }
   
   ### Debugging
   output$DEBUG <- renderPrint({
@@ -324,5 +331,6 @@ shinyServer(function(input, output, session) {
     print(User())
     user <- getUser(User()['Name'])
     print(fromJSON(user[["DSTags"]]))
+    print(users)
   })
 })
