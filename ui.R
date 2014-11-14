@@ -16,7 +16,6 @@ shinyUI(navbarPage(
            fluidPage(
              fluidRow(
                column(3, 
-                      
                       # Application title
                       titlePanel("Define your skills"),
                       hr(),
@@ -24,7 +23,7 @@ shinyUI(navbarPage(
                         h2("Login Info", align = "center"),
                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
                         #                         uiOutput("LoginField"), 
-                        selectizeInput(inputId = "s_Name", label = NULL, choices = c("Login" = "", "blou", "bli"), multiple = FALSE, options = list(create = "true")),
+                        selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
                         helpText("Type the associated password (or create one). Use a Weak, non-important password."),
                         textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
@@ -77,18 +76,14 @@ shinyUI(navbarPage(
            )
   ),
   tabPanel("All Profiles",
-           h4("The database with all profiles is available", a(href = "www",  "here")),
+           h4("The database with all profiles is available", a(href = "BIH_users.sqlite",  "here")),
            hr(),
            renderUI("AllProfiles1")
   ),
   tabPanel("Potential Teams"
   ),
   tabPanel("Debug",
-           verbatimTextOutput("DEBUG"),
-           textOutput("loginErrorLoad"),
-           textOutput("loginErrorCreate"),
-           textOutput("loginErrorDelete"),
-           textOutput("loginErrorSave")
+           verbatimTextOutput("DEBUG")
   )
 )
 )
