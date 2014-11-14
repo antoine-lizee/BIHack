@@ -15,7 +15,10 @@ library(rjson)
 
 source("StaticVariables.R")
 
-## UTILITIES
+
+# Functions ---------------------------------------------------------------
+
+## UTILITIES #######
 
 getCartCoord <- function(V) {
   r <- V[1]
@@ -33,10 +36,13 @@ getHex <- function(RGB) {
   paste0("#", paste(sapply(RGB, function(i) as.character(as.hexmode(i))), collapse = ""))
 }
 
-## BACKEND - Database
+
+## BACKEND - Database  #######
+
 # Schema:
 user0 <- data.frame(Name = "USER0", Password = "765",
                     DS = 0, BE = 3, FE = 2, 
+                    DSTags = "json", BETags = "json", FETags = "json",
                     Datasets = toJSON(c(listOfDatasets$Education[1], listOfDatasets$Education[2])),
                     Involvement = 2,
                     stringsAsFactors = F)
@@ -52,6 +58,7 @@ if (!dbExistsTable(con, userTableName)) {
 # dbDisconnect(con)
 # file.remove(userDBName)
 
+# Functions
 getUser <- function(Name) {
   user <- dbGetQuery(con, paste0("SELECT * FROM ", userTableName, " WHERE Name = '", Name, "'"))
   if (nrow(user) == 0) {
@@ -87,14 +94,21 @@ updateUser <- function(User) {
     return(FALSE)
   }
   ## UGLY hack
-  dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = '", User$Name,"'"))
+  dbGetQuery(con, paste0("DELETE FROM ", userTableName, " WHERE Name = '", User$Name,"'"))
   dbSendQuery(con, paste0("INSERT INTO ", userTableName, " VALUES ", unpackDF(User)))
 }
 
-getListOfUsers <- function() {
-  sqliteQuickColumn(con, userTableName, "Name")
+deleteUser <- function(Name) {
+  dbGetQuery(con, paste0("DELETE FROM ", userTableName, " WHERE Name = '", Name,"'"))
 }
 
+getListOfUsers <- function() {
+  dbGetQuery(con, paste("SELECT Name FROM", userTableName))[[1]]
+}
+
+
+
+# Server definition -------------------------------------------------------
 
 shinyServer(function(input, output, session) {
   
@@ -116,6 +130,9 @@ shinyServer(function(input, output, session) {
     user$DS <- DS()
     user$BE <- BE()
     user$FE <- FE()
+    user$DSTags <- toJSON(input$c_DS)
+    user$BETags <- toJSON(input$c_BE)
+    user$FETags <- toJSON(input$c_FE)
     user$Datasets <- toJSON(input$s_Datasets)
     user$Involvement <- input$i_Involvement
     return(user)
@@ -156,9 +173,9 @@ shinyServer(function(input, output, session) {
   
   ### Updates to the UI
   #   
-  #   output$LoginField <- renderUI({
-  #     selectizeInput(inputId = "s_Name", label = NULL, choices = c(c("Login" = "", getListOfUsers()), multiple = FALSE, options = list(create = "true"))
-  #   })
+  output$LoginField <- renderUI(
+    selectizeInput(inputId = "s_Name", label = "Select or Create a pseudo below", choices = c("Login" = "", getListOfUsers()), multiple = FALSE, options = list(create = "true"))
+  )
   
   output$textInvolvement <- reactive({
     c("A few hours", "Half of the time", "I'll be out a couple of hours", "All the time but when sleeping home")[input$i_Involvement]
@@ -166,41 +183,112 @@ shinyServer(function(input, output, session) {
   
   ### Backend Listeners
   
-  output$loginErrorCreate <- renderText({
-    if (input$b_Create != 0){ # Try to create the record
+  output$LoginErrorCreate <- renderText({
+    if (input$b_Create != 0){
+      # Check for missing info
       if (isolate(User()['Name']) == "") {
         return("ERROR: No pseudo provided.")
       }
+      if (isolate(input$s_Password == "")) {
+        return("ERROR: No password provided.")
+      }
       ## Try to retrieve the user data in a non-dependent fashion
       user <- isolate(getUser(User()['Name']))
+      # Check for existing user
       if (!is.null(user)) {
         return("ERROR: The user already exists... Try another one or load the existing user by also typing the password.")
-      } else {
-        createUser(isolate(User()))
       }
+      createUser(isolate(User()))
+      return("User Created")
     }
   })
   
-  output$loginErrorLoad <- renderText({
-    if (input$b_Load != 0){ # Try to create the record
-      ## Retrieve the user data in a non-dependent fashion
-      user <- isolate(getUser(User()['Name']))
-      if (is.null(user)) {
-        "ERROR: The user with this pseudo doesn't exist yet."
-      } else {
-        if (user$Password != isolate(User()['Password']))
-          "ERROR: The password doesn't match the records..."
-        else {
-          "User Loaded"
+  output$LoginErrorLoad <- renderText({
+    if (input$b_Load != 0){ 
+        # Check for missing info
+        if (isolate(User()['Name']) == "") {
+          return("ERROR: No pseudo provided.")
         }
+        if (isolate(input$s_Password == "")) {
+          return("ERROR: No password provided.")
+        }
+        user <- isolate(getUser(User()['Name']))
+        # Check for non-existing user
+        if (is.null(user)) {
+          return("ERROR: The user with this pseudo doesn't exist yet.")
+        } 
+        # Check for matching password
+        if (user$Password != isolate(User()['Password'])){
+          return("ERROR: The password doesn't match the records...")
+        }
+        # Load the user data
+        updateTextInput(session, inputId = "s_Password", value = "")
+        updateSliderInput(session, inputId = "i_DS", value = user[["DS"]])
+        updateSliderInput(session, inputId = "i_BE", value = user[["BE"]])
+        updateSliderInput(session, inputId = "i_FE", value = user[["FE"]])
+        updateSliderInput(session, inputId = "i_Involvement", value = user[["Involvement"]])
+        updateSelectInput(session, inputId = "s_Datasets", selected = fromJSON(user[["Datasets"]]))
+        updateSelectInput(session, inputId = "s_DS", selected = fromJSON(user[["DSTags"]]))
+        updateSelectInput(session, inputId = "s_BE", selected = fromJSON(user[["BETags"]]))
+        updateSelectInput(session, inputId = "s_FE", selected = fromJSON(user[["FETags"]]))
+        return("User Loaded.")  
+    }  
+  })
+  
+    output$LoginErrorUpdate <- renderText({
+      if (input$b_Update != 0){ 
+        # Check for missing info
+        if (isolate(User()['Name']) == "") {
+          return("ERROR: No pseudo provided.")
+        }
+        if (isolate(input$s_Password == "")) {
+          return("ERROR: No password provided.")
+        }
+        user <- isolate(getUser(User()['Name']))
+        # Check for non-existing user
+        if (is.null(user)) {
+          return("ERROR: The user with this pseudo doesn't exist yet.")
+        } 
+        # Check for matching password
+        if (user$Password != isolate(User()['Password'])){
+          return("ERROR: The password doesn't match the records...")
+        }
+        # Load the user data
+        updateUser(User())
+        return("User data updated.")
+      }    
+    })
+  
+  output$LoginErrorDelete <- renderText({
+    if (input$b_Delete != 0){ 
+      # Check for missing info
+      if (isolate(User()['Name']) == "") {
+        return("ERROR: No pseudo provided.")
       }
-    }
+      if (isolate(input$s_Password == "")) {
+        return("ERROR: No password provided.")
+      }
+      user <- isolate(getUser(User()['Name']))
+      # Check for non-existing user
+      if (is.null(user)) {
+        return("ERROR: The user with this pseudo doesn't exist yet.")
+      } 
+      # Check for matching password
+      if (user$Password != isolate(User()['Password'])){
+        return("ERROR: The password doesn't match the records...")
+      }
+      # Load the user data
+      deleteUser(user$Name)
+      return("User data Delted.")
+    }    
   })
   
   ### Debugging
   output$DEBUG <- renderPrint({
     print(profile())
     print(color())
+    print(getListOfUsers())
+    dput(User())
     print(User())
   })
 })
