@@ -6,7 +6,7 @@
 #
 
 library(shiny)
-options(shiny.trace=FALSE)
+options(shiny.trace=TRUE)
 options(shiny.error=traceback)
 library(fmsb)
 library(RSQLite)
@@ -41,6 +41,7 @@ getHex <- function(RGB) {
 
 # Schema:
 user0 <- data.frame(Name = "USER0", Password = "765",
+                    FirstName = "Yo", LastName = "YO", 
                     DS = 0, BE = 3, FE = 2, 
                     DSTags = "json", BETags = "json", FETags = "json",
                     Datasets = toJSON(c(listOfDatasets$Education[1], listOfDatasets$Education[2])),
@@ -127,6 +128,8 @@ shinyServer(function(input, output, session) {
     user <- user0
     user$Name <- input$s_Name
     user$Password <- input$s_Password
+    user$FirstName <- input$s_FirstName
+    user$LastName <- input$s_LastName
     user$DS <- DS()
     user$BE <- BE()
     user$FE <- FE()
@@ -205,59 +208,54 @@ shinyServer(function(input, output, session) {
   
   output$LoginErrorLoad <- renderText({
     if (input$b_Load != 0){ 
-        # Check for missing info
-        if (isolate(User()['Name']) == "") {
-          return("ERROR: No pseudo provided.")
-        }
-        if (isolate(input$s_Password == "")) {
-          return("ERROR: No password provided.")
-        }
-        user <- isolate(getUser(User()['Name']))
-        # Check for non-existing user
-        if (is.null(user)) {
-          return("ERROR: The user with this pseudo doesn't exist yet.")
-        } 
-        # Check for matching password
-        if (user$Password != isolate(User()['Password'])){
-          return("ERROR: The password doesn't match the records...")
-        }
-        # Load the user data
-        updateTextInput(session, inputId = "s_Password", value = "")
-        updateSliderInput(session, inputId = "i_DS", value = user[["DS"]])
-        updateSliderInput(session, inputId = "i_BE", value = user[["BE"]])
-        updateSliderInput(session, inputId = "i_FE", value = user[["FE"]])
-        updateSliderInput(session, inputId = "i_Involvement", value = user[["Involvement"]])
-        updateSelectInput(session, inputId = "s_Datasets", selected = fromJSON(user[["Datasets"]]))
-        updateSelectInput(session, inputId = "s_DS", selected = fromJSON(user[["DSTags"]]))
-        updateSelectInput(session, inputId = "s_BE", selected = fromJSON(user[["BETags"]]))
-        updateSelectInput(session, inputId = "s_FE", selected = fromJSON(user[["FETags"]]))
-        return("User Loaded.")  
+      # Check for missing info
+      if (isolate(User()['Name']) == "") {
+        return("ERROR: No pseudo provided.")
+      }
+      user <- isolate(getUser(User()['Name']))
+      # Check for non-existing user
+      if (is.null(user)) {
+        return("ERROR: The user with this pseudo doesn't exist yet.")
+      } 
+      # Load the user data
+      updateTextInput(session, inputId = "s_Password", value = "")
+      updateTextInput(session, inputId = "s_FirstName", value = user[["FirstName"]])
+      updateTextInput(session, inputId = "s_LastName", value = user[["LastName"]])
+      updateSliderInput(session, inputId = "i_DS", value = user[["DS"]])
+      updateSliderInput(session, inputId = "i_BE", value = user[["BE"]])
+      updateSliderInput(session, inputId = "i_FE", value = user[["FE"]])
+      updateSliderInput(session, inputId = "i_Involvement", value = user[["Involvement"]])
+      updateSelectInput(session, inputId = "s_Datasets", selected = fromJSON(user[["Datasets"]]))
+      updateSelectInput(session, inputId = "s_DS", selected = fromJSON(user[["DSTags"]]))
+      updateSelectInput(session, inputId = "s_BE", selected = fromJSON(user[["BETags"]]))
+      updateSelectInput(session, inputId = "s_FE", selected = fromJSON(user[["FETags"]]))
+      return("User Loaded.")  
     }  
   })
   
-    output$LoginErrorUpdate <- renderText({
-      if (input$b_Update != 0){ 
-        # Check for missing info
-        if (isolate(User()['Name']) == "") {
-          return("ERROR: No pseudo provided.")
-        }
-        if (isolate(input$s_Password == "")) {
-          return("ERROR: No password provided.")
-        }
-        user <- isolate(getUser(User()['Name']))
-        # Check for non-existing user
-        if (is.null(user)) {
-          return("ERROR: The user with this pseudo doesn't exist yet.")
-        } 
-        # Check for matching password
-        if (user$Password != isolate(User()['Password'])){
-          return("ERROR: The password doesn't match the records...")
-        }
-        # Load the user data
-        updateUser(User())
-        return("User data updated.")
-      }    
-    })
+  output$LoginErrorUpdate <- renderText({
+    if (input$b_Update != 0){ 
+      # Check for missing info
+      if (isolate(User()['Name']) == "") {
+        return("ERROR: No pseudo provided.")
+      }
+      if (isolate(input$s_Password == "")) {
+        return("ERROR: No password provided.")
+      }
+      user <- isolate(getUser(User()['Name']))
+      # Check for non-existing user
+      if (is.null(user)) {
+        return("ERROR: The user with this pseudo doesn't exist yet.")
+      } 
+      # Check for matching password
+      if (user$Password != isolate(User()['Password'])){
+        return("ERROR: The password doesn't match the records...")
+      }
+      # Load the user data
+      updateUser(User())
+      return("User data updated.")
+    }    
+  })
   
   output$LoginErrorDelete <- renderText({
     if (input$b_Delete != 0){ 
@@ -284,6 +282,38 @@ shinyServer(function(input, output, session) {
   })
   
   ### All Profiles pane
+  
+  users <- dbReadTable(con, userTableName)
+  
+  output$AllProfiles1 <- renderUI({
+    users <<- dbReadTable(con, userTableName) # try to refresh
+    return(apply(users, 1, function(user) {
+      fluidRow(fluidRow(
+        column(2,
+               h3(user['Name'], align = "center"),
+               p(user['FirstName'],user['LastName'], align = "center")),
+#                fluidRow(column(6,
+#                                p(user['Name'])),
+#                         column(6,
+#                                p(user['Name'])))),
+        column(4,
+               selectInput(paste0("bla", 1), label = "Datasets", choices = unname(substr(unlist(listOfDatasets),1,2)),selected = substr(fromJSON(user[["Datasets"]]), 1, 2), multiple = TRUE)),
+#         column(3,
+#                plotOutput(paste0("plot", user['Name']), height = "100px")),
+        column(3,
+                h2("..."))
+        ),
+      hr()
+      )
+    }))
+
+    output[paste0("plot", users[['Name']])] <- lapply(users[['Name']], function(userName) {
+      return(renderPlot(
+      radarchart(df = data(), axistype = 0, seg = 5, 
+                 pcol = "black", pfcol = color())
+      ))})
+
+  })
   
   ### Debugging
   output$DEBUG <- renderPrint({

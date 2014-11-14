@@ -17,54 +17,47 @@ shinyUI(navbarPage(
              fluidRow(
                column(3, 
                       # Application title
-                      titlePanel("Define your skills"),
+                      h3("Define your skills", align = "center"),
                       hr(),
                       wellPanel(
-                        h2("Login Info", align = "center"),
+                        h3("Login Info", align = "center"),
                         #                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
                         uiOutput("LoginField"), 
                         #                         selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
                         helpText(paste0("Type the associated 'identifying token' that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
                         textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
-                        hr(),
+#                         hr(),
                         helpText("Optional information to identify you better"),
                         textInput(inputId = "s_FirstName", label = "First Name", ""),
                         textInput(inputId = "s_LastName", label = "Last Name", "")
-                      )
-               ),
-               column(9,
-                      fluidRow(
-                        wellPanel(
-                          column(3,fluidRow(
-                                 actionButton("b_Create", "Create Profile"),
-                                 textOutput("LoginErrorCreate"))),
-                          column(3,fluidRow(
-                                 actionButton("b_Load", "Load Profile"), 
-                                 textOutput("LoginErrorLoad"))),
-                          column(3,fluidRow(
-                                 actionButton("b_Update", "Update Profile"),
-                                 textOutput("LoginErrorUpdate"))),
-                          column(3,fluidRow(
-                                 actionButton("b_Delete", "Delete Profile"), 
-                                 textOutput("LoginErrorDelete")))
-                        )
                       ),
+                      wellPanel(
+                        actionButton("b_Create", "Create Profile"),
+                        textOutput("LoginErrorCreate"),
+                        actionButton("b_Load", "Load Profile"), 
+                        textOutput("LoginErrorLoad"),
+                        actionButton("b_Update", "Save Profile"),
+                        textOutput("LoginErrorUpdate"),
+                        actionButton("b_Delete", "Delete Profile"), 
+                        textOutput("LoginErrorDelete")
+                      )),
+               column(9,
                       fluidRow( 
                         column(4, 
                                wellPanel(
-                                 h4("Back-end"),
+                                 h4("Back-end", align = "center"),
                                  sliderInput("i_BE", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
                                  selectInput("s_BE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[1]]), multiple = TRUE, options("create" = "yes"))
                                )),
                         column(4, 
                                wellPanel(
-                                 h4("Front-end"),
+                                 h4("Front-end", align = "center"),
                                  sliderInput("i_FE", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
                                  selectInput("s_FE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[2]]), multiple = TRUE, options("create" = "yes"))
                                )),
                         column(4, 
                                wellPanel(
-                                 h4("Data-Science"),
+                                 h4("Data-Science", align = "center"),
                                  sliderInput("i_DS", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
                                  selectInput("s_DS", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[3]]), multiple = TRUE, options("create" = "yes"))
                                ))
@@ -90,7 +83,7 @@ shinyUI(navbarPage(
   tabPanel("All Profiles",
            h4("The database with all profiles is available", a(href = "BIH_users.sqlite",  "here")),
            hr(),
-           renderUI("AllProfiles1")
+           uiOutput("AllProfiles1")
   ),
   tabPanel("Potential Teams",
            "Coming soon"
