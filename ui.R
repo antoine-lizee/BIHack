@@ -21,21 +21,21 @@ shinyUI(navbarPage(
                       hr(),
                       wellPanel(
                         h2("Login Info", align = "center"),
-#                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
+                        #                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
                         uiOutput("LoginField"), 
-#                         selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
+                        #                         selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
                         helpText(paste0("Type the associated 'identifying token' that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
                         textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
-                        fluidRow(actionButton("b_Create", "Create Profile"),
-                                 actionButton("b_Delete", "Delete Profile")), 
-                        br(),
-                        fluidRow(actionButton("b_Load", "Load Profile"), 
-                                 actionButton("b_Update", "Update Profile")),
+                        helpText("Select the action to perform from that info")
+                        actionButton("b_Create", "Create Profile"),
                         textOutput("LoginErrorCreate"),
+                        actionButton("b_Load", "Load Profile"), 
                         textOutput("LoginErrorLoad"),
-                        textOutput("LoginErrorDelete"),
-                        textOutput("LoginErrorUpdate")
+                        actionButton("b_Update", "Update Profile"),
+                        textOutput("LoginErrorUpdate"),
+                        actionButton("b_Delete", "Delete Profile"), 
+                        textOutput("LoginErrorDelete")
                       )),
                column(9,
                       fluidRow( 
@@ -81,7 +81,8 @@ shinyUI(navbarPage(
            hr(),
            renderUI("AllProfiles1")
   ),
-  tabPanel("Potential Teams"
+  tabPanel("Potential Teams",
+           "Coming soon"
   ),
   tabPanel("Debug",
            verbatimTextOutput("DEBUG")
