@@ -1,4 +1,4 @@
-listOfSkills <- list(c("R", "Python", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Frameworks", "Django", "SQL", "noSQL", "ruby", "ROR"),
+listOfSkills <- list(c("Python", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Django", "SQL", "noSQL", "ruby", "ROR"),
                      c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android"),
                      c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats"))
 listOfDatasets <- list("Education" = c("01 - Help Teachers Get What They Need", 
