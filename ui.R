@@ -24,7 +24,7 @@ shinyUI(navbarPage(
 #                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
                         uiOutput("LoginField"), 
 #                         selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
-                        helpText("Type the associated password (or create one). Use a Weak, non-important password."),
+                        helpText(paste0("Type the associated 'identifying token' that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
                         textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
                         fluidRow(actionButton("b_Create", "Create Profile"),
@@ -43,19 +43,19 @@ shinyUI(navbarPage(
                                wellPanel(
                                  h4("Back-end"),
                                  sliderInput("i_BE", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
-                                 selectInput("c_BE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[1]]), multiple = TRUE, selectize = TRUE, options("create" = "yes"))
+                                 selectInput("s_BE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[1]]), multiple = TRUE, options("create" = "yes"))
                                )),
                         column(4, 
                                wellPanel(
                                  h4("Front-end"),
                                  sliderInput("i_FE", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
-                                 selectInput("c_FE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[2]]), multiple = TRUE, selectize = TRUE, options("create" = "yes"))
+                                 selectInput("s_FE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[2]]), multiple = TRUE, options("create" = "yes"))
                                )),
                         column(4, 
                                wellPanel(
                                  h4("Data-Science"),
                                  sliderInput("i_DS", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
-                                 selectInput("c_DS", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[3]]), multiple = TRUE, selectize = TRUE, options("create" = "yes"))
+                                 selectInput("s_DS", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[3]]), multiple = TRUE, options("create" = "yes"))
                                ))
                       ),
                       hr(),
@@ -67,7 +67,8 @@ shinyUI(navbarPage(
                                h2(textOutput("Profile", inline = TRUE), align = "center"),
                                wellPanel(
                                  selectInput(inputId = "s_Datasets", label = "Select the dataset(s) your are interesting to work on:", choices = listOfDatasets, multiple = TRUE),
-                                 sliderInput("i_Involvement", label = "How much time do you intend to spend at the hackathon?", min = 1, max = 4, value = 2, step = 1 )
+                                 sliderInput("i_Involvement", label = "How much time do you intend to spend at the hackathon?", min = 1, max = 4, value = 2, step = 1 ),
+                                 p(textOutput("textInvolvement"))
                                )
                         )
                       )
