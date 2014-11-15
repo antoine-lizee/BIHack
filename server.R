@@ -157,12 +157,15 @@ shinyServer(function(input, output, session) {
   })
   
   ### PROFILE
-  profile <- reactive({
+  getProfile <- function(DBF) {
     getPolarCoord(apply(
       apply(
-        matrix(c(DS(), BE(), FE(), 0:2 * 2*pi/3 + pi/2), nrow = 2, byrow = 3),
+        matrix(c(DBF, 0:2 * 2*pi/3 + pi/2), nrow = 2, byrow = 3),
         2, getCartCoord), 
       1, sum))
+  }
+  profile <- reactive({
+    getProfile(c(DS(), BE(), FE()))
   })
   r <- reactive({profile()[1]})
   theta <- reactive({profile()[2]})
@@ -319,49 +322,147 @@ shinyServer(function(input, output, session) {
   
   ### All Profiles pane
   
-  users <- getUserTable()
+  Users <- reactive({
+    input$b_Create
+    input$b_Save
+    input$b_Delete
+    return(getUserTable())
+  })
   
   output$AllProfiles1 <- renderUI({
-    users <<- dbReadTable(con, userTableName) # try to refresh
+    users <- Users()
+    users <- users[order(users$Name),]
+    for (i_user in 1:nrow(users)) {
+      local({
+        user <- users[i_user, ]
+        output[[paste0("plot", user['Name'])]] <- renderPlot({
+          color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
+          par(mar = c(0,0,0,0))
+          radarchart(df = plotData(user), axistype = 0, seg = 5, 
+                     pcol = "black", pfcol = color, vlabel = c("", "", ""))
+        })
+      })
+    }
     return(apply(users, 1, function(user) {
       fluidRow(fluidRow(
         column(2,
                h4(user['Name'], align = "center"),
                p(user['FirstName'],user['LastName'], align = "center")),
+        column(1,
+               plotOutput(paste0("plot", user['Name']), height = "80px")),
         column(4,
-               selectInput(paste0("bla", 1), label = "Datasets", 
-                           choices = unname(substr(unlist(listOfDatasets),1,2)), selected = substr(fromJSON(user[["Datasets"]]), 1, 2), multiple = TRUE)),
-        column(3,
-               plotOutput(paste0("plot", user['Name']), height = "100px")),
-        column(3,
-               h2("..."))
+               withTags(div(class='row-fluid',
+                            div(class = 'span2', p("Datasets:")),
+                            lapply(unname(substr(unlist(listOfDatasets),1,2)),
+                                   function(datasetName){
+                                     div(class='span2', checkboxInput(inputId = "simOption", label = datasetName, 
+                                                                      value=(datasetName %in% substr(fromJSON(user[["Datasets"]]), 1, 2))))
+                                   } )
+               ))),
+        #         column(4,
+        #                selectInput(paste0("bla", 1), label = "Datasets", 
+        #                            choices = unname(substr(unlist(listOfDatasets),1,2)), selected = substr(fromJSON(user[["Datasets"]]), 1, 2), multiple = TRUE)),
+        column(5,
+               #                selectInput(user, label = NULL, choices = fromJSON(user[["BETags"]]), selected = fromJSON(user[["BETags"]]), multiple = TRUE, width = 400),
+               #                selectInput(user, label = NULL, choices = fromJSON(user[["FETags"]]), selected = fromJSON(user[["FETags"]]), multiple = TRUE, width = 400),
+               #                selectInput(user, label = NULL, choices = fromJSON(user[["DSTags"]]), selected = fromJSON(user[["DSTags"]]), multiple = TRUE, width = 400)
+               p(paste("BE:", paste(fromJSON(user[["BETags"]]), collapse = " - "))),
+               p(paste("FE:", paste(fromJSON(user[["FETags"]]), collapse = " - "))),
+               p(paste("DS:", paste(fromJSON(user[["DSTags"]]), collapse = " - ")))
+        )
       ),
       hr()
       )
     }))
   })
   
-  users <- getUserTable()
-  for (i_user in 1:nrow(users)) {
-    local({
-      user <- users[i_user, ]
-      output[[paste0("plot", user['Name'])]] <- renderPlot({
-        color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
-        par(mar = c(0,0,0,0))
-        radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                   pcol = "black", pfcol = color)
+  
+  output$Team1 <- renderUI({
+    if (input$s_Name == "") {
+      output$Team2 <- renderUI(helpText("Load or Create your profile first"))
+      return(helpText("Load or Create your profile first"))
+    }
+    users <- Users()
+    if (input$b_FilterDatasets) {
+      myDatasets <- fromJSON(User()[["Datasets"]])
+      users <- users[sapply(users$Datasets, function(udi) {
+        length(intersect(myDatasets, fromJSON(udi))) != 0
+      }),]
+    }
+    myProfile <- profile()
+    profiles <- apply(users[c("DS", "BE", "FE")], 1, getProfile)
+    distances <- abs(profiles[1,] - myProfile[1]) + abs(profiles[2,] - myProfile[2])
+    users1 <- users[order(distances),]
+    users2 <- users[order(-distances),]
+    ## Define the graph outputs
+    for (i_user in 1:nrow(users)) {
+      local({
+        user <- users[i_user, ]
+        output[[paste0("plot1", user['Name'])]] <- renderPlot({
+          color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
+          par(mar = c(0,0,0,0))
+          radarchart(df = plotData(user), axistype = 0, seg = 5, 
+                     pcol = "black", pfcol = color, vlabel = c("", "", ""))
+        })
+        output[[paste0("plot2", user['Name'])]] <- renderPlot({
+          color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
+          par(mar = c(0,0,0,0))
+          radarchart(df = plotData(user), axistype = 0, seg = 5, 
+                     pcol = "black", pfcol = color, vlabel = c("", "", ""))
+        })
       })
+    }
+    ## Define the other team representation
+    output$Team2 <- renderUI({
+      return(apply(users2, 1, function(user) {
+        fluidRow(fluidRow(
+          column(4,
+                 h4(user['Name'], align = "center"),
+                 p(user['FirstName'],user['LastName'], align = "center")),
+          column(4,
+                 plotOutput(paste0("plot2", user['Name']), height = "80px")),
+          column(2,
+                 p("Involvement:", align = "center"),
+                 p(user[["Involvement"]], align = "center"))
+        )
+        )
+      }))
     })
-  }
+    return(apply(users1, 1, function(user) {
+      fluidRow(fluidRow(
+        column(4,
+               h4(user['Name'], align = "center"),
+               p(user['FirstName'],user['LastName'], align = "center")),
+        column(4,
+               plotOutput(paste0("plot1", user['Name']), height = "80px")),
+        column(2,
+               p("Involvement:", align = "center"),
+               p(user[["Involvement"]], align = "center"))
+      )
+      )
+    }))
+    
+  })
+  
+  
+  
   
   ### Debugging
   output$DEBUG <- renderPrint({
-    print(profile())
-    print(getListOfUsers())
-    dput(User())
-    print(User())
-    if (!is.null(getUser(User()['Name'])))
-      print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
+#     print(profile())
+#     print(getListOfUsers())
+#     dput(User())
+#     print(User())
+#     if (!is.null(getUser(User()['Name'])))
+#       print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
+#     print(users)
+    users <- Users()
+    myProfile <- profile()
+    profiles <- apply(users[c("DS", "BE", "FE")], 1, getProfile)
+    distances <- abs(profiles[1,] - myProfile[1]) + abs(profiles[2,] - myProfile[2])
     print(users)
+    print(profiles)
+    print(myProfile)
+    print(distances)
   })
 })

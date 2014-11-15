@@ -84,18 +84,50 @@ shinyUI(navbarPage(
   ),
   tabPanel("All Profiles",
            fluidRow(
-             column(4, h3("Browse hackers"),style = "vertical-align: bottom; display: table-cell;float: none;"),
+             column(4, offset = 1, h3("Browse hackers")),#,style = "vertical-align: bottom; display: table-cell;float: none;"),
              #              column(2, hr(), style = "vertical-align: bottom; display: table-cell;float: none;"),
-             column(6, offset = 2, h4("The database with all profiles is available", a(href = "BIH_users.sqlite",  "here")), style = "vertical-align: bottom;display: table-cell;float: none;")
+             column(4, offset = 3, h4("The database with all profiles is available", a(href = "BIH_users.sqlite",  "here")),style = "vertical-align: top;")#, style = "vertical-align: top; align:left; display: table-cell;float: none;")
            ),
            hr(),
            uiOutput("AllProfiles1")
   ),
-  tabPanel("Potential Teams",
-           "Coming soon"
+  #   tabPanel("Find your Team",
+  #            fluidRow(
+  #              column(4, offset = 1, h3("Choose some teammates")),
+  #              column(3, offset = 2, checkboxInput(inputId = "b_FilterDatasets", "Filter for common datasets"))),
+  #            hr(),
+  #            fluidRow(column(4,
+  #                            h4("Like-minded people", align = "center"),
+  #                            uiOutput("Team1")),
+  #                     column(8,
+  #                            h4("Complementary people", align = "center")),
+  #                     fluidRow(
+  #                       column(6,
+  #                              div(class="thin_vertical_line", style="position:absolute;left:-15px;height:70%;top:0px;"),
+  #                              uiOutput("Team2")),
+  #                       column(6,
+  #                              uiOutput("Team3")))
+  #            )
+  #            
+  #   ),
+  tabPanel("Find your Team",
+           fluidRow(
+             column(4, offset = 1, h3("Choose some teammates")),
+             column(3, offset = 2, checkboxInput(inputId = "b_FilterDatasets", "Filter for common datasets"))),
+           hr(),
+           fluidRow(column(6,
+                           h4("Like-minded people", align = "center"),
+                           uiOutput("Team1")),
+                    column(6,
+                           h4("Complementary people", align = "center"),
+                           uiOutput("Team2"))
+           )
+           
   ),
   tabPanel("Debug",
            verbatimTextOutput("DEBUG")
-  )
+  ),
+  hr(),
+  p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right")
 )
 )
