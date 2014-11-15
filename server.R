@@ -146,7 +146,7 @@ shinyServer(function(input, output, session) {
   }
   
   ### PLOT
-
+  
   output$radarPlot <- renderPlot({
     # draw radar chart
     user <- User()
@@ -238,12 +238,12 @@ shinyServer(function(input, output, session) {
           column(6,
                  actionButton("b_Delete", "Delete Profile"), 
                  textOutput("LoginErrorDelete"))
-          )))  
+        )))  
     } else {
       if (input$s_Password == "") {
         return(wellPanel(
           p("Create a weak, non-important password to be sure nobody edits your profile by mistake")
-          ))
+        ))
       }
       return(wellPanel(
         p( actionButton("b_Create", "Create Profile"),
@@ -256,7 +256,7 @@ shinyServer(function(input, output, session) {
   observe({
     input$b_Clear
     # Default all values
-#     updateTextInput(session, inputId = "s_Password", value = "")
+    #     updateTextInput(session, inputId = "s_Password", value = "")
     updateTextInput(session, inputId = "s_FirstName", value = "")
     updateTextInput(session, inputId = "s_LastName", value = "")
     updateSliderInput(session, inputId = "i_DS", value = "")
@@ -343,23 +343,25 @@ shinyServer(function(input, output, session) {
   
   users <- getUserTable()
   for (i_user in 1:nrow(users)) {
-    user <- users[i_user, ]
-    output[[paste0("plot", user['Name'])]] <- renderPlot({
-      color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
-      par(mar = c(0,0,0,0))
-      radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                 pcol = "black", pfcol = color)
+    local({
+      user <- users[i_user, ]
+      output[[paste0("plot", user['Name'])]] <- renderPlot({
+        color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
+        par(mar = c(0,0,0,0))
+        radarchart(df = plotData(user), axistype = 0, seg = 5, 
+                   pcol = "black", pfcol = color)
+      })
     })
   }
   
   ### Debugging
   output$DEBUG <- renderPrint({
     print(profile())
-    print(color())
     print(getListOfUsers())
     dput(User())
     print(User())
-    print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
+    if (!is.null(getUser(User()['Name'])))
+      print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
     print(users)
   })
 })
