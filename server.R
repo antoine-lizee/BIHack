@@ -146,17 +146,14 @@ shinyServer(function(input, output, session) {
   }
   
   ### PLOT
-  color.bckp <- reactive({
-    topo.colors(3)[which.max(data()[3,])]
-  })
-  color <- reactive({
-    getHex(floor( -(c(DS(), BE(), FE()) / 5)^1.5 * 150 + 250))
-  })
+
   output$radarPlot <- renderPlot({
     # draw radar chart
+    user <- User()
+    color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
     par(mar = c(0,0,0,0))
-    radarchart(df = plotData(User()), axistype = 0, seg = 5, 
-               pcol = "black", pfcol = color())
+    radarchart(df = plotData(user), axistype = 0, seg = 5, 
+               pcol = "black", pfcol = color)
   })
   
   ### PROFILE
@@ -188,7 +185,7 @@ shinyServer(function(input, output, session) {
   )
   
   output$textInvolvement <- reactive({
-    c("A few hours", "Half of the time", "I'll be out a couple of hours", "All the time but when sleeping home")[input$i_Involvement]
+    c("A few hours", "Half of the time", "I'll be out a couple of hours", "I'll go home to rest at night", "I don't intend to sleep")[input$i_Involvement]
   })
   
   ### Backend Listeners
@@ -213,17 +210,13 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$LoginErrorLoad <- renderText({
-    if (input$b_Load != 0){ 
-      # Check for missing info
-      if (isolate(User()['Name']) == "") {
-        return("ERROR: No pseudo provided.")
-      }
-      user <- isolate(getUser(User()['Name']))
-      # Check for non-existing user
-      if (is.null(user)) {
-        return("ERROR: The user with this pseudo doesn't exist yet.")
-      } 
+  output$LoginAction <- renderUI({
+    if (input$s_Name == "") {
+      return(wellPanel(
+        p("Choose or Create a pseudo to start.")))
+    }
+    
+    if (!is.null(user <- getUser(input$s_Name))) { 
       # Load the user data
       updateTextInput(session, inputId = "s_Password", value = "")
       updateTextInput(session, inputId = "s_FirstName", value = user[["FirstName"]])
@@ -236,8 +229,44 @@ shinyServer(function(input, output, session) {
       updateSelectInput(session, inputId = "s_DS", selected = fromJSON(user[["DSTags"]]))
       updateSelectInput(session, inputId = "s_BE", selected = fromJSON(user[["BETags"]]))
       updateSelectInput(session, inputId = "s_FE", selected = fromJSON(user[["FETags"]]))
-      return("User Loaded.")  
-    }  
+      return(wellPanel(
+        p("User Loaded.", align = "center"),
+        fluidRow(
+          column(6,
+                 actionButton("b_Update", "Save Profile"),
+                 textOutput("LoginErrorUpdate")),
+          column(6,
+                 actionButton("b_Delete", "Delete Profile"), 
+                 textOutput("LoginErrorDelete"))
+          )))  
+    } else {
+      if (input$s_Password == "") {
+        return(wellPanel(
+          p("Create a weak, non-important password to be sure nobody edits your profile by mistake")
+          ))
+      }
+      return(wellPanel(
+        p( actionButton("b_Create", "Create Profile"),
+           actionButton("b_Clear", "Clear Dashboard")),
+        textOutput("LoginErrorCreate", inline = T)))
+    }
+  })
+  
+  # Clear data
+  observe({
+    input$b_Clear
+    # Default all values
+#     updateTextInput(session, inputId = "s_Password", value = "")
+    updateTextInput(session, inputId = "s_FirstName", value = "")
+    updateTextInput(session, inputId = "s_LastName", value = "")
+    updateSliderInput(session, inputId = "i_DS", value = "")
+    updateSliderInput(session, inputId = "i_BE", value = "")
+    updateSliderInput(session, inputId = "i_FE", value = "")
+    updateSliderInput(session, inputId = "i_Involvement", value = "")
+    updateSelectInput(session, inputId = "s_Datasets", selected = "")
+    updateSelectInput(session, inputId = "s_DS", selected = "")
+    updateSelectInput(session, inputId = "s_BE", selected = "")
+    updateSelectInput(session, inputId = "s_FE", selected = "")
   })
   
   output$LoginErrorUpdate <- renderText({
@@ -297,7 +326,7 @@ shinyServer(function(input, output, session) {
     return(apply(users, 1, function(user) {
       fluidRow(fluidRow(
         column(2,
-               h3(user['Name'], align = "center"),
+               h4(user['Name'], align = "center"),
                p(user['FirstName'],user['LastName'], align = "center")),
         column(4,
                selectInput(paste0("bla", 1), label = "Datasets", 
@@ -316,9 +345,10 @@ shinyServer(function(input, output, session) {
   for (i_user in 1:nrow(users)) {
     user <- users[i_user, ]
     output[[paste0("plot", user['Name'])]] <- renderPlot({
+      color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
       par(mar = c(0,0,0,0))
       radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                 pcol = "black", pfcol = color())
+                 pcol = "black", pfcol = color)
     })
   }
   
@@ -329,8 +359,7 @@ shinyServer(function(input, output, session) {
     print(getListOfUsers())
     dput(User())
     print(User())
-    user <- getUser(User()['Name'])
-    print(fromJSON(user[["DSTags"]]))
+    print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
     print(users)
   })
 })
