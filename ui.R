@@ -86,7 +86,7 @@ shinyUI(navbarPage(
            fluidRow(
              column(4, offset = 1, h3("Browse hackers")),#,style = "vertical-align: bottom; display: table-cell;float: none;"),
              #              column(2, hr(), style = "vertical-align: bottom; display: table-cell;float: none;"),
-             column(4, offset = 3, h4("The database with all profiles is available", a(href = "BIH_users.sqlite",  "here")),style = "vertical-align: top;")#, style = "vertical-align: top; align:left; display: table-cell;float: none;")
+             column(4, offset = 3, h4("The database with all profiles is available", a(href = "https://www.dropbox.com/s/a9wmnne0ditzuxw/BIH_users.sqlite?dl=0",  "here")),style = "vertical-align: top;")#, style = "vertical-align: top; align:left; display: table-cell;float: none;")
            ),
            hr(),
            uiOutput("AllProfiles1")
