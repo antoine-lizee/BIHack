@@ -209,14 +209,16 @@ shinyServer(function(input, output, session) {
         return("ERROR: The user already exists... Try another one or load the existing user by also typing the password.")
       }
       createUser(isolate(User()))
+#       updateTextInput(session, "t_Trigger", value = "yo")
       return("User Created")
     }
   })
   
   output$LoginAction <- renderUI({
-    if (input$s_Name == "") {
+#     input$t_Trigger ## Doesn't work
+    if (input$s_Name == "") { #Listen and check for the name inbox
       return(wellPanel(
-        p("Choose or Create a pseudo to start.")))
+        p("Choose or Create a login to start.")))
     }
     
     if (!is.null(user <- getUser(input$s_Name))) { 
@@ -316,7 +318,7 @@ shinyServer(function(input, output, session) {
       }
       # Load the user data
       deleteUser(user$Name)
-      return("User data Delted.")
+      return("User data Deleted.")
     }    
   })
   

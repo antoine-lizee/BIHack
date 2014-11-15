@@ -21,17 +21,17 @@ shinyUI(navbarPage(
                       hr(),
                       wellPanel(
                         h3("Login Info", align = "center"),
+                        uiOutput("LoginAction"),
                         #                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
                         uiOutput("LoginField"), 
                         #                         selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
-                        helpText(paste0("Type the associated 'identifying token'")),# that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
+                        helpText(paste0("'Password'")),# that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
                         textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
                         helpText("Optional information to identify you better"),
                         textInput(inputId = "s_FirstName", label = "First Name", ""),
                         textInput(inputId = "s_LastName", label = "Last Name", "")
-                      ),
-                      uiOutput("LoginAction")
+                      )
                       #                       wellPanel(
                       #                         actionButton("b_Create", "Create Profile"),
                       #                         textOutput("LoginErrorCreate"),
