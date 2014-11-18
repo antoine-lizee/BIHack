@@ -6,8 +6,6 @@
 #
 
 
-source("StaticVariables.R")
-
 library(shiny)
 
 shinyUI(navbarPage(
@@ -32,16 +30,6 @@ shinyUI(navbarPage(
                         textInput(inputId = "s_FirstName", label = "First Name", ""),
                         textInput(inputId = "s_LastName", label = "Last Name", "")
                       )
-                      #                       wellPanel(
-                      #                         actionButton("b_Create", "Create Profile"),
-                      #                         textOutput("LoginErrorCreate"),
-                      #                         actionButton("b_Load", "Load Profile"), 
-                      #                         textOutput("LoginErrorLoad"),
-                      #                         actionButton("b_Update", "Save Profile"),
-                      #                         textOutput("LoginErrorUpdate"),
-                      #                         actionButton("b_Delete", "Delete Profile"), 
-                      #                         textOutput("LoginErrorDelete")
-                      #                       )
                ),
                column(9,
                       fluidRow( 
