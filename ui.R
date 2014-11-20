@@ -1,15 +1,16 @@
+# Hackathoner Profiler
+# This script defines the user interface of the app.
+# As a convention, "input" variable names are prefixed by a one-letter indicator on the type of the variable,
+# while "output" variable names are capitalized.
+# 
+# Copyright Antoine Lizee 11/2014 antoine.lizee@gmail.com. See the license included in the project.
 
-# This is the user-interface definition of a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
 
 
 library(shiny)
 
 shinyUI(navbarPage(
-  "BayesImpact Hackathon Profiler",
+  "Your Hackathon Profiler",
   tabPanel("Your Profile",
            fluidPage(
              fluidRow(
@@ -37,19 +38,19 @@ shinyUI(navbarPage(
                                wellPanel(
                                  h4("Back-end", align = "center"),
                                  sliderInput("i_BE", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
-                                 selectInput("s_BE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[1]]), multiple = TRUE, options("create" = "yes"))
+                                 selectInput("s_BE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[["BE"]]), multiple = TRUE, options("create" = "yes"))
                                )),
                         column(4, 
                                wellPanel(
                                  h4("Front-end", align = "center"),
                                  sliderInput("i_FE", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
-                                 selectInput("s_FE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[2]]), multiple = TRUE, options("create" = "yes"))
+                                 selectInput("s_FE", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[["FE"]]), multiple = TRUE, options("create" = "yes"))
                                )),
                         column(4, 
                                wellPanel(
                                  h4("Data-Science", align = "center"),
                                  sliderInput("i_DS", label = "Estimate your overall skill Level", min = 0, max = 5, step = 0.5, value = 0, ticks = TRUE),
-                                 selectInput("s_DS", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[[3]]), multiple = TRUE, options("create" = "yes"))
+                                 selectInput("s_DS", label = "Select / add some skills", choices = c("keyword..."="", listOfSkills[["DS"]]), multiple = TRUE, options("create" = "yes"))
                                ))
                       ),
                       hr(),

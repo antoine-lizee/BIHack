@@ -1,6 +1,29 @@
-listOfSkills <- list(c("Python", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Django", "SQL", "noSQL", "ruby", "ROR"),
-                     c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android"),
-                     c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats"))
+# Hackathoner Profiler
+# This script defines the global variables and other general conventions used throughout the app.
+# 
+# Copyright Antoine Lizee 11/2014 antoine.lizee@gmail.com. See the license included in the project.
+
+
+# libraries ---------------------------------------------------------------
+
+library(shiny)
+# debuging
+options(shiny.trace=TRUE)
+options(shiny.error=traceback)
+# radarplot
+library(fmsb)
+# "back-end"
+library(RSQLite)
+# library(jsonlite) 
+library(rjson) # less powerfule but does a better job for quick conversions (without classes)
+
+
+# Static info -------------------------------------------------------------
+
+listOfSkills <- list(BE = c("Python", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Django", "SQL", "noSQL", "ruby", "ROR"),
+                     FE = c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android"),
+                     DS = c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats"))
+
 listOfDatasets <- list("Education" = c("01 - Help Teachers Get What They Need", 
                                        "04 - Help Donors Choose Better Serve Teachers"),
                        "Safety & Crime" = c("02 - Fight Child Sexual Exploitation", 
@@ -16,3 +39,17 @@ listOfDatasets <- list("Education" = c("01 - Help Teachers Get What They Need",
                                      "12 - Predict Whereabouts of Types of Fish"
                        )
 )
+
+# Schema ------------------------------------------------------------------
+
+user0 <- data.frame(Name = "USER0", Password = "765",
+                    FirstName = "Yo", LastName = "YO", 
+                    DS = 0, BE = 3, FE = 2, 
+                    DSTags = "json", BETags = "json", FETags = "json",
+                    Datasets = toJSON(c(listOfDatasets$Education[1], listOfDatasets$Education[2])),
+                    Involvement = 2,
+                    stringsAsFactors = F)
+
+userDBName <- "BIH_users.sqlite"
+userTableName <- "BIH_users"
+

@@ -1,17 +1,10 @@
+# Hackathoner Profiler
+# This script defines the global variables and other general conventions used throughout the app.
+# 
+# Copyright Antoine Lizee 11/2014 antoine.lizee@gmail.com. See the license included in the project.
 
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
 
-library(shiny)
-options(shiny.trace=TRUE)
-options(shiny.error=traceback)
-library(fmsb)
-library(RSQLite)
-# library(jsonlite)
-library(rjson)
+
 
 # Functions ---------------------------------------------------------------
 
@@ -36,17 +29,7 @@ getHex <- function(RGB) {
 
 ## BACKEND - Database  #######
 
-# Schema:
-user0 <- data.frame(Name = "USER0", Password = "765",
-                    FirstName = "Yo", LastName = "YO", 
-                    DS = 0, BE = 3, FE = 2, 
-                    DSTags = "json", BETags = "json", FETags = "json",
-                    Datasets = toJSON(c(listOfDatasets$Education[1], listOfDatasets$Education[2])),
-                    Involvement = 2,
-                    stringsAsFactors = F)
 # Initialization
-userDBName <- "BIH_users.sqlite"
-userTableName <- "BIH_users"
 con <- RSQLite::dbConnect(SQLite(), userDBName, cache_size = 5000, synchronous = "full")
 if (!dbExistsTable(con, userTableName)) {
   dbWriteTable(con, name = userTableName, value = user0, row.names = F)
@@ -190,11 +173,11 @@ shinyServer(function(input, output, session) {
   })
   
   ### Backend Listeners
-    
-  observe({
+  
+  output$LoginAction <- renderUI({
     
     if (input$s_Name == "") { #Listen and check for the name inbox
-      output$LoginAction <- renderUI(
+      return(
         wellPanel(
           p("Choose or Create a login to start.")))
     }
@@ -214,9 +197,9 @@ shinyServer(function(input, output, session) {
       updateSelectInput(session, inputId = "s_BE", selected = fromJSON(user[["BETags"]]))
       updateSelectInput(session, inputId = "s_FE", selected = fromJSON(user[["FETags"]]))
       output$LoginMessage <- renderText( "User Loaded.")
-      output$LoginAction <- renderUI(
+      return(
         wellPanel(
-          p(textOutput("LoginMessage"), align = "center"),
+          p(textOutput("LoginMessage", inline = TRUE), align = "center"),
           fluidRow(
             column(6,
                    actionButton("b_Update", "Save Changes"),
@@ -228,13 +211,13 @@ shinyServer(function(input, output, session) {
     } else {
       # Check if the password field is empty
       if (input$s_Password == "") {
-        output$LoginAction <- renderUI(
+        return(
           wellPanel(
             p("Create a weak, non-important password to be sure nobody edits your profile by mistake")
           ))
       } else {
-        output$LoginMessage <- "Don't forget to save your profile!"
-        output$LoginAction <- renderUI(
+        output$LoginMessage <- renderText("Don't forget to save your profile!")
+        return(
           wellPanel(
             p(textOutput("LoginMessage"), align = "center"),
             fluidRow(
@@ -242,10 +225,9 @@ shinyServer(function(input, output, session) {
                      actionButton("b_Create", "Save Profile"),
                      textOutput("LoginErrorCreate")),
               column(6,
-                     actionButton("b_Clear", "Delete Profile"), 
+                     actionButton("b_Clear", "Clear Dashboard"), 
                      textOutput("LoginErrorClear"))
             )))  
-        
       }
     }
     
@@ -266,79 +248,81 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, inputId = "s_DS", selected = "")
     updateSelectInput(session, inputId = "s_BE", selected = "")
     updateSelectInput(session, inputId = "s_FE", selected = "")
-#     output$LoginMessage <- renderText("Dashboard Cleared...")
+    #     output$LoginMessage <- renderText("Dashboard Cleared...")
   })
   
-  # Create profile listener
+  # Listener for profile creation
   observe({
-    if (input$b_Create != 0){
-      # Check for missing info
-      if (isolate(User()['Name']) == "") {
-        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+    if (!is.null(input$b_Create)){  # Need that to prevent eecution of code before creation of the widget (and thus the variable)
+      if (input$b_Create != 0){
+        # Check for missing info
+        if (isolate(User()['Name']) == "") {
+          output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+        }
+        if (isolate(input$s_Password == "")) {
+          output$LoginMessage <- renderText("ERROR: No password provided.")
+        }
+        ## Try to retrieve the user data in a non-dependent fashion
+        user <- isolate(getUser(User()['Name']))
+        # Check for existing user
+        if (!is.null(user)) {
+          output$LoginMessage <- renderText("ERROR: The user already exists... Try another one or load the existing user by also typing the password.")
+        }
+        createUser(isolate(User()))
+        output$LoginMessage <- renderText("User Created")
       }
-      if (isolate(input$s_Password == "")) {
-        output$LoginMessage <- renderText("ERROR: No password provided.")
-      }
-      ## Try to retrieve the user data in a non-dependent fashion
-      user <- isolate(getUser(User()['Name']))
-      # Check for existing user
-      if (!is.null(user)) {
-        output$LoginMessage <- renderText("ERROR: The user already exists... Try another one or load the existing user by also typing the password.")
-      }
-      createUser(isolate(User()))
-      output$LoginMessage <- renderText("User Created")
     }
   })
   
-  # Update profile listener
-  observe <- ({
-    if (input$b_Update != 0){ 
-      # Check for missing info
-      if (isolate(User()['Name']) == "") {
-        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-      }
-      if (isolate(input$s_Password == "")) {
-        output$LoginMessage <- renderText("ERROR: No password provided.")
-      }
-      user <- isolate(getUser(User()['Name']))
-      # Check for non-existing user
-      if (is.null(user)) {
-        output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
-      } 
-      # Check for matching password
-      if (user$Password != isolate(User()['Password'])){
-        output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
-      }
-      # Load the user data
-      updateUser(User())
-      output$LoginMessage <- renderText("User data updated.")
-    }    
-  })
-  
-  # Delete profile listener
-  observe({
-    if (input$b_Delete != 0){ 
-      # Check for missing info
-      if (isolate(User()['Name']) == "") {
-        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-      }
-      if (isolate(input$s_Password == "")) {
-        output$LoginMessage <- renderText("ERROR: No password provided.")
-      }
-      user <- isolate(getUser(User()['Name']))
-      # Check for non-existing user
-      if (is.null(user)) {
-        output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
-      } 
-      # Check for matching password
-      if (user$Password != isolate(User()['Password'])){
-        output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
-      }
-      # Load the user data
-      deleteUser(user$Name)
-      output$LoginMessage <- renderText("User data Deleted.")
-    }    
-  })
+  # Listener for profile update
+  #   observe({
+  #     if (input$b_Update != 0){ 
+  #       # Check for missing info
+  #       if (isolate(User()['Name']) == "") {
+  #         output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+  #       }
+  #       if (isolate(input$s_Password == "")) {
+  #         output$LoginMessage <- renderText("ERROR: No password provided.")
+  #       }
+  #       user <- isolate(getUser(User()['Name']))
+  #       # Check for non-existing user
+  #       if (is.null(user)) {
+  #         output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
+  #       } 
+  #       # Check for matching password
+  #       if (user$Password != isolate(User()['Password'])){
+  #         output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
+  #       }
+  #       # Load the user data
+  #       updateUser(User())
+  #       output$LoginMessage <- renderText("User data updated.")
+  #     }    
+  #   })
+  #   
+  #   # Delete profile listener
+  #   observe({
+  #     if (input$b_Delete != 0){ 
+  #       # Check for missing info
+  #       if (isolate(User()['Name']) == "") {
+  #         output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+  #       }
+  #       if (isolate(input$s_Password == "")) {
+  #         output$LoginMessage <- renderText("ERROR: No password provided.")
+  #       }
+  #       user <- isolate(getUser(User()['Name']))
+  #       # Check for non-existing user
+  #       if (is.null(user)) {
+  #         output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
+  #       } 
+  #       # Check for matching password
+  #       if (user$Password != isolate(User()['Password'])){
+  #         output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
+  #       }
+  #       # Load the user data
+  #       deleteUser(user$Name)
+  #       output$LoginMessage <- renderText("User data Deleted.")
+  #     }    
+  #   })
   
   ### All Profiles pane
   
