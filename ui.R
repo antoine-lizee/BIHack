@@ -117,22 +117,21 @@ shinyUI(navbarPage(
            
   ),
   tabPanel("Debug",
+           checkboxInput(inputId = "showDebug", label = "Debug?", value = FALSE),
            verbatimTextOutput("DEBUG")
   ),
-  footerPanel(
-    checkboxInput(inputId = "showDebug", label = "Debug?", value = FALSE)
-    ,
-    conditionalPanel(condition = "input.showDebug == true"
-                     , wellPanel(
-                       h5("Debug Panel:")
-                       , helpText(HTML("Click to run code in the console"))
-                       , uiOutput("Console"), br()
-                       , helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>"))
-                       , helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app"))
-                     )
-    )
-  ),
   hr(),
-  p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right")
+  fluidRow(
+    column(6,
+           conditionalPanel(condition = "input.showDebug == true"
+                            ,wellPanel(
+                              h5("Debug Panel:")
+                              , helpText(HTML("Click to run code in the console"))
+                              , uiOutput("Console - DEBUG"), br()
+                              , helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>"))
+                              , helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app"))
+                            ))),
+    column(6, p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"))
+  )
 )
 )
