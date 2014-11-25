@@ -117,7 +117,7 @@ shinyUI(navbarPage(
            
   ),
   tabPanel("Remarks",
-           h2("A few gotchas..."),
+           h3("A few gotchas..."),
            br(),
            h4("Foreword: Security"),
            p("No, this app is not secure, and is not meant to be. More on that later, but you should be aware that the passwords are not hashed at any point. Use the webapp for testing only and Re-use the code responsibly."),
@@ -126,21 +126,17 @@ shinyUI(navbarPage(
              I began to think a couple of days before of a solution that would be interesting to try.")
   ),
   tabPanel("Debug",
-           checkboxInput(inputId = "showDebug", label = "Debug?", value = FALSE),
+           fluidRow(column(2,uiOutput("Console")),
+                    column(10, 
+                           helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>")),
+                           helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app")))
+           ),
            br(),
            verbatimTextOutput("DEBUG")
   ),
   hr(),
-  fluidRow(
-    column(4,
-           conditionalPanel(condition = "input.showDebug == true"
-                            ,wellPanel(
-                              h5("Debug Panel:")
-                              , helpText(HTML("Click to run code in the console"))
-                              , uiOutput("Console"), br()
-                              , helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>"))
-                              , helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app"))
-                            ))),
-    column(8, p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"))
-  )
+  p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right")
+  
 ))
+
+
