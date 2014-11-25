@@ -563,7 +563,7 @@ shinyServer(function(input, output, session) {
                                        , '#console {color: rgb(221,17,68);}'
       )}
     }
-    list(btnTags(),actionButton(inputId = "console", label = "console"))
+    list(btnTags(),actionButton(inputId = "console", label = "console - DEBUG"))
   })
   
   observe(label = "console", {

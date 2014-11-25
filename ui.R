@@ -116,22 +116,31 @@ shinyUI(navbarPage(
            )
            
   ),
+  tabPanel("Remarks",
+           h2("A few gotchas..."),
+           br(),
+           h4("Foreword: Security"),
+           p("No, this app is not secure, and is not meant to be. More on that later, but you should be aware that the passwords are not hashed at any point. Use the webapp for testing only and Re-use the code responsibly."),
+           h4("Why?"),
+           p("I took part in the - amazing - ", a("Bayes Impact Hackathon", href = "http://www.bayesimpact.org/hack"), "on November 15/16, and was a bit frustrated by the inability to team up efficiently if you didn't know personally the people you wanted to be in.\
+             I began to think a couple of days before of a solution that would be interesting to try.")
+  ),
   tabPanel("Debug",
            checkboxInput(inputId = "showDebug", label = "Debug?", value = FALSE),
+           br(),
            verbatimTextOutput("DEBUG")
   ),
   hr(),
   fluidRow(
-    column(6,
+    column(4,
            conditionalPanel(condition = "input.showDebug == true"
                             ,wellPanel(
                               h5("Debug Panel:")
                               , helpText(HTML("Click to run code in the console"))
-                              , uiOutput("Console - DEBUG"), br()
+                              , uiOutput("Console"), br()
                               , helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>"))
                               , helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app"))
                             ))),
-    column(6, p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"))
+    column(8, p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"))
   )
-)
-)
+))
