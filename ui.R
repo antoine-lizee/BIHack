@@ -9,8 +9,13 @@
 
 library(shiny)
 
+# inspired from https://gist.github.com/ptoche/8405209, see bottom of page
+footerPanel <- function(...) {
+  div(class="footer", hr(), ...)
+}
+
 shinyUI(navbarPage(
-  "Your Hackathon Profiler",
+  "The Hackathoner Profiler",
   tabPanel("Your Profile",
            fluidPage(
              fluidRow(
@@ -21,11 +26,9 @@ shinyUI(navbarPage(
                       wellPanel(
                         h3("Login Info", align = "center"),
                         uiOutput("LoginAction"),
-                        #                         helpText("Create a meaningful, easily recognized pseudo or select one that you have already created."),
                         uiOutput("LoginField"), 
-                        #                         selectizeInput(inputId = "s_Name", label = NULL, choices = c(list("Login" = ""), list("blou", "bli")), multiple = FALSE, options = list(create = "true")),
-                        helpText(paste0("'Password'")),# that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
-                        textInput(inputId = "s_Password", label = NULL, ""), #value = paste0(sample(9,4), collapse = "")),
+                        #                         helpText(paste0("'Password'")),# that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
+                        textInput(inputId = "s_Password", label = "Password", ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
                         helpText("Optional information to identify you better"),
                         textInput(inputId = "s_FirstName", label = "First Name", ""),
@@ -61,7 +64,7 @@ shinyUI(navbarPage(
                                p("Your Profie is:", align = "center"),
                                h2(textOutput("Profile", inline = TRUE), align = "center"),
                                wellPanel(
-                                 selectInput(inputId = "s_Datasets", label = "Select the dataset(s) your are interesting to work on:", choices = listOfDatasets, multiple = TRUE),
+                                 selectInput(inputId = "s_Datasets", label = "Select the dataset(s) your are interested in:", choices = listOfDatasets, multiple = TRUE),
                                  sliderInput("i_Involvement", label = "How much time do you intend to spend at the hackathon?", min = 1, max = 5, value = 2, step = 1 ),
                                  p(textOutput("textInvolvement"))
                                )
@@ -115,6 +118,19 @@ shinyUI(navbarPage(
   ),
   tabPanel("Debug",
            verbatimTextOutput("DEBUG")
+  ),
+  footerPanel(
+    checkboxInput(inputId = "showDebug", label = "Debug?", value = FALSE)
+    ,
+    conditionalPanel(condition = "input.showDebug == true"
+                     , wellPanel(
+                       h5("Debug Panel:")
+                       , helpText(HTML("Click to run code in the console"))
+                       , uiOutput("Console"), br()
+                       , helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>"))
+                       , helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app"))
+                     )
+    )
   ),
   hr(),
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right")

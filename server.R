@@ -5,7 +5,6 @@
 
 
 
-
 # Functions ---------------------------------------------------------------
 
 ## UTILITIES #######
@@ -26,20 +25,36 @@ getHex <- function(RGB) {
   paste0("#", paste(sapply(RGB, function(i) as.character(as.hexmode(i))), collapse = ""))
 }
 
+ifelseFun <- function(vec, ifVec, fun, ...) {
+  resVec <- fun(vec, ...)
+  if (length(resVec) == 1){
+    if (resVec) {
+      return(ifVec)
+    } else {
+      return(vec)
+    }
+  } else {
+    return(ifelse(resVec, ifVec, vec))
+  }
+}
+# Tested like that:
+ifelseFun(c(1,2,NA,3), 0, is.na)
+ifelseFun(c(1,2,NA,3), "", is.null)
+ifelseFun(NULL, "", is.null)
+
+
 
 ## BACKEND - Database  #######
 
-# Initialization
-con <- RSQLite::dbConnect(SQLite(), userDBName, cache_size = 5000, synchronous = "full")
-if (!dbExistsTable(con, userTableName)) {
-  dbWriteTable(con, name = userTableName, value = user0, row.names = F)
-  dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
-}
-# # Reset code:
-# dbDisconnect(con)
-# file.remove(userDBName)
-
 # Functions
+getCon <- function() {
+  RSQLite::dbConnect(RSQLite::SQLite(), userDBName, cache_size = 5000, synchronous = "full")
+}
+
+closeCon <- function(con) {
+  RSQLite::dbDisconnect(con)
+}
+
 getUser <- function(Name) {
   user <- dbGetQuery(con, paste0("SELECT * FROM ", userTableName, " WHERE Name = '", Name, "'"))
   if (nrow(user) == 0) {
@@ -74,7 +89,7 @@ updateUser <- function(User) {
     warning("No name provided for the user")
     return(FALSE)
   }
-  ## UGLY hack
+  ## UGLY update hack
   dbGetQuery(con, paste0("DELETE FROM ", userTableName, " WHERE Name = '", User$Name,"'"))
   dbSendQuery(con, paste0("INSERT INTO ", userTableName, " VALUES ", unpackDF(User)))
 }
@@ -84,12 +99,22 @@ deleteUser <- function(Name) {
 }
 
 getListOfUsers <- function() {
-  dbGetQuery(con, paste("SELECT Name FROM", userTableName))[[1]]
+  sort(dbGetQuery(con, paste("SELECT Name FROM", userTableName))[[1]])
 }
 
 getUserTable <- function() {
   dbReadTable(con, userTableName)
 }
+
+# Initialization
+con <- getCon()
+if (!dbExistsTable(con, userTableName)) {
+  dbWriteTable(con, name = userTableName, value = user0, row.names = F)
+  dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
+}
+# # Reset code:
+# dbDisconnect(con)
+# file.remove(userDBName)
 
 
 
@@ -97,7 +122,26 @@ getUserTable <- function() {
 
 shinyServer(function(input, output, session) {
   
-  ### DATA Unpacking
+  ### Session management ####################
+  
+  con <- getCon()
+  
+  # Timing & schedule (hardly necessary)
+  values <- reactiveValues(starting = TRUE,
+                           loadingProfile = FALSE)
+  session$onFlushed(function() {
+    values$starting <- FALSE
+    values$loadingProfile <- FALSE
+  }, once = FALSE)
+  
+  # Closing connection
+  session$onSessionEnded(function(){
+    closeCon(con)
+  })
+  
+  
+  ### DATA Unpacking ####################
+  
   DS <- reactive({input$i_DS})
   BE <- reactive({input$i_BE})
   FE <- reactive({input$i_FE})
@@ -119,25 +163,37 @@ shinyServer(function(input, output, session) {
     return(user)
   })
   
-  plotData <- function(user){
+  
+  ### PLOT  ####################
+  
+  plotData <- function(user = list(DS = 0, BE = 0, FE = 0)){
     data.frame(check.names = F,
                "Data Science" = c(5,0,user[['DS']]),
                "Back-End" = c(5,0, user[['BE']]),
                "Front-End" = c(5,0, user[['FE']]))
   }
   
-  ### PLOT
+  color <- function(user) {
+    getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
+  }
   
   output$radarPlot <- renderPlot({
+    # Doesn't work as expected
+    #     if (values$loadingProfile) {
+    #       #       cat("##### DEBUG", file = stderr())
+    #       invalidateLater(2000, session)
+    #     } else {
     # draw radar chart
     user <- User()
-    color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
     par(mar = c(0,0,0,0))
     radarchart(df = plotData(user), axistype = 0, seg = 5, 
-               pcol = "black", pfcol = color)
+               pcol = "black", pfcol = color(user))
+    #     }
   })
   
-  ### PROFILE
+  
+  ### PROFILE  ####################
+  
   getProfile <- function(DBF) {
     getPolarCoord(apply(
       apply(
@@ -145,10 +201,12 @@ shinyServer(function(input, output, session) {
         2, getCartCoord), 
       1, sum))
   }
+  
   profile <- reactive({
     getProfile(c(DS(), BE(), FE()))
   })
   r <- reactive({profile()[1]})
+  
   theta <- reactive({profile()[2]})
   output$Profile <- renderText({
     ifelse((r()/max(DS(), BE(), FE()))<=1/3, "Balanced", 
@@ -160,21 +218,47 @@ shinyServer(function(input, output, session) {
                                               ifelse(theta() < 5*pi/3,  "Full Stack dev", "Front-End dev")))))))
   })
   
-  ### Updates to the UI
-  #   
+  
+  ### UIs  ####################
+  
+  # Login selectize
   output$LoginField <- renderUI(
     selectizeInput(inputId = "s_Name", label = "Select or Create a pseudo below", 
                    choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
                    options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
   )
+  # Update the choices
+  #   observe({
+  #     input$b_Login
+  #     updateSelectizeInput("s_Name", choices = c("Login" = "", getListOfUsers()))
+  #   })
   
   output$textInvolvement <- reactive({
     c("A few hours", "Half of the time", "I'll be out a couple of hours", "I'll go home to rest at night", "I don't intend to sleep")[input$i_Involvement]
   })
   
-  ### Backend Listeners
+  loggedInUI <- wellPanel(
+    p(textOutput("LoginMessage", inline = TRUE), align = "center"),
+    fluidRow(
+      column(6, actionButton("b_Update", "Save Changes")),
+      column(6, actionButton("b_Delete", "Delete Profile"))
+    ))
   
+  firstLoggingUI <- wellPanel(
+    p(textOutput("LoginMessage"), align = "center"),
+    fluidRow(
+      column(6, actionButton("b_Create", "Save Profile"))
+    ))
+  
+  
+  ### Backend Listeners ##################################
+  
+  ## Main listener for the login and password field.
   output$LoginAction <- renderUI({
+    
+    #     if (values$starting) {
+    #       return(helpText("Loading..."))
+    #     }
     
     if (input$s_Name == "") { #Listen and check for the name inbox
       return(
@@ -185,6 +269,7 @@ shinyServer(function(input, output, session) {
     # Check if user is in database
     if (!is.null(user <- getUser(input$s_Name))) {
       # Load the user data
+      values$loadingProfile <- TRUE
       updateTextInput(session, inputId = "s_Password", value = "")
       updateTextInput(session, inputId = "s_FirstName", value = user[["FirstName"]])
       updateTextInput(session, inputId = "s_LastName", value = user[["LastName"]])
@@ -193,21 +278,11 @@ shinyServer(function(input, output, session) {
       updateSliderInput(session, inputId = "i_FE", value = user[["FE"]])
       updateSliderInput(session, inputId = "i_Involvement", value = user[["Involvement"]])
       updateSelectInput(session, inputId = "s_Datasets", selected = fromJSON(user[["Datasets"]]))
-      updateSelectInput(session, inputId = "s_DS", selected = fromJSON(user[["DSTags"]]))
-      updateSelectInput(session, inputId = "s_BE", selected = fromJSON(user[["BETags"]]))
-      updateSelectInput(session, inputId = "s_FE", selected = fromJSON(user[["FETags"]]))
+      updateSelectInput(session, inputId = "s_DS", selected = ifelseFun(fromJSON(user[["DSTags"]]), "", is.null))
+      updateSelectInput(session, inputId = "s_BE", selected = ifelseFun(fromJSON(user[["BETags"]]), "", is.null))
+      updateSelectInput(session, inputId = "s_FE", selected = ifelseFun(fromJSON(user[["FETags"]]), "", is.null))
       output$LoginMessage <- renderText( "User Loaded.")
-      return(
-        wellPanel(
-          p(textOutput("LoginMessage", inline = TRUE), align = "center"),
-          fluidRow(
-            column(6,
-                   actionButton("b_Update", "Save Changes"),
-                   textOutput("LoginErrorUpdate")),
-            column(6,
-                   actionButton("b_Delete", "Delete Profile"), 
-                   textOutput("LoginErrorDelete"))
-          )))  
+      return(loggedInUI)  
     } else {
       # Check if the password field is empty
       if (input$s_Password == "") {
@@ -217,17 +292,10 @@ shinyServer(function(input, output, session) {
           ))
       } else {
         output$LoginMessage <- renderText("Don't forget to save your profile!")
-        return(
-          wellPanel(
-            p(textOutput("LoginMessage"), align = "center"),
-            fluidRow(
-              column(6,
-                     actionButton("b_Create", "Save Profile"),
-                     textOutput("LoginErrorCreate")),
-              column(6,
-                     actionButton("b_Clear", "Clear Dashboard"), 
-                     textOutput("LoginErrorClear"))
-            )))  
+        # Reset personal info
+        updateTextInput(session, inputId = "s_FirstName", value = "")
+        updateTextInput(session, inputId = "s_LastName", value = "")
+        return(firstLoggingUI)  
       }
     }
     
@@ -253,78 +321,95 @@ shinyServer(function(input, output, session) {
   
   # Listener for profile creation
   observe({
-    if (!is.null(input$b_Create)){  # Need that to prevent eecution of code before creation of the widget (and thus the variable)
-      if (input$b_Create != 0){
-        # Check for missing info
-        if (isolate(User()['Name']) == "") {
-          output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-        }
-        if (isolate(input$s_Password == "")) {
-          output$LoginMessage <- renderText("ERROR: No password provided.")
-        }
+    # Need that to prevent eecution of code before creation of the widget (and thus the variable)
+    if (!is.null(input$b_Create) && input$b_Create != 0){
+      # Check for missing info
+      if (isolate(User()['Name']) == "") {
+        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+      } else if (isolate(input$s_Password == "")) {
+        output$LoginMessage <- renderText("ERROR: No password provided.")
+      } else {
         ## Try to retrieve the user data in a non-dependent fashion
         user <- isolate(getUser(User()['Name']))
         # Check for existing user
         if (!is.null(user)) {
-          output$LoginMessage <- renderText("ERROR: The user already exists... Try another one or load the existing user by also typing the password.")
+          output$LoginMessage <- renderText("ERROR: The user already exists... Try another login or load the existing user by also typing the password.")
+          return()
+        } else {
+          tryCatch({
+            createUser(isolate(User()))
+            output$LoginMessage <- renderText("User Created")
+            output$LoginUI <- loggedInUI
+          }, error = function(e) {
+            output$LoginMessage <- renderText("ERROR: ", e$message)
+          })
         }
-        createUser(isolate(User()))
-        output$LoginMessage <- renderText("User Created")
       }
     }
   })
   
   # Listener for profile update
-  #   observe({
-  #     if (input$b_Update != 0){ 
-  #       # Check for missing info
-  #       if (isolate(User()['Name']) == "") {
-  #         output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-  #       }
-  #       if (isolate(input$s_Password == "")) {
-  #         output$LoginMessage <- renderText("ERROR: No password provided.")
-  #       }
-  #       user <- isolate(getUser(User()['Name']))
-  #       # Check for non-existing user
-  #       if (is.null(user)) {
-  #         output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
-  #       } 
-  #       # Check for matching password
-  #       if (user$Password != isolate(User()['Password'])){
-  #         output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
-  #       }
-  #       # Load the user data
-  #       updateUser(User())
-  #       output$LoginMessage <- renderText("User data updated.")
-  #     }    
-  #   })
-  #   
-  #   # Delete profile listener
-  #   observe({
-  #     if (input$b_Delete != 0){ 
-  #       # Check for missing info
-  #       if (isolate(User()['Name']) == "") {
-  #         output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-  #       }
-  #       if (isolate(input$s_Password == "")) {
-  #         output$LoginMessage <- renderText("ERROR: No password provided.")
-  #       }
-  #       user <- isolate(getUser(User()['Name']))
-  #       # Check for non-existing user
-  #       if (is.null(user)) {
-  #         output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
-  #       } 
-  #       # Check for matching password
-  #       if (user$Password != isolate(User()['Password'])){
-  #         output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
-  #       }
-  #       # Load the user data
-  #       deleteUser(user$Name)
-  #       output$LoginMessage <- renderText("User data Deleted.")
-  #     }    
-  #   })
+  observe({
+    if (!is.null(input$b_Update) && input$b_Update != 0){ 
+      # Check for missing info
+      if (isolate(User()['Name']) == "") {
+        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+        return
+      }
+      if (isolate(input$s_Password == "")) {
+        output$LoginMessage <- renderText("ERROR: No password provided.")
+        return
+      }
+      user <- isolate(getUser(User()['Name']))
+      # Check for non-existing user
+      if (is.null(user)) {
+        output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
+        return
+      } 
+      # Check for matching password
+      if (user$Password != isolate(User()['Password'])){
+        output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
+        return
+      }
+      # Load the user data
+      updateUser(User())
+      output$LoginMessage <- renderText("User data updated.")
+    }    
+  })
   
-  ### All Profiles pane
+  # Listener for profile deletion
+  observe({
+    if (!is.null(input$b_Delete) && input$b_Delete != 0){ 
+      # Check for missing info
+      if (isolate(User()['Name']) == "") {
+        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+      }
+      else if (isolate(input$s_Password == "")) {
+        #         output$LoginMessage <- renderText(HTML('<font color="red"> Please type the password to delete this profile!</font>'))
+        output$LoginMessage <- renderText("Please type the password to delete this profile!") #TODO put in red
+      } else {
+        user <- isolate(getUser(User()['Name']))
+        # Check for non-existing user
+        if (is.null(user)) {
+          output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
+        } else if (user$Password != isolate(User()['Password'])){ # Check for matching password
+          output$LoginMessage <- renderText("The password doesn't match the records... Try again?")
+        } else {
+          # Delete the user data
+          tryCatch({
+            deleteUser(user$Name)
+            output$LoginMessage <- renderText("User data Deleted.")
+          },
+          error = function(e) {
+            output$LoginMessage <- renderText("ERROR:", e$message)
+          })
+        }
+      }
+    }    
+  })
+  
+  
+  ### All Profiles pane ################################################
   
   Users <- reactive({
     input$b_Create
@@ -340,10 +425,9 @@ shinyServer(function(input, output, session) {
       local({
         user <- users[i_user, ]
         output[[paste0("plot", user['Name'])]] <- renderPlot({
-          color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
           par(mar = c(0,0,0,0))
           radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                     pcol = "black", pfcol = color, vlabel = c("", "", ""))
+                     pcol = "black", pfcol = color(user), vlabel = c("", "", ""))
         })
       })
     }
@@ -369,7 +453,7 @@ shinyServer(function(input, output, session) {
         column(5,
                #                selectInput(user, label = NULL, choices = fromJSON(user[["BETags"]]), selected = fromJSON(user[["BETags"]]), multiple = TRUE, width = 400),
                #                selectInput(user, label = NULL, choices = fromJSON(user[["FETags"]]), selected = fromJSON(user[["FETags"]]), multiple = TRUE, width = 400),
-               #                selectInput(user, label = NULL, choices = fromJSON(user[["DSTags"]]), selected = fromJSON(user[["DSTags"]]), multiple = TRUE, width = 400)
+               #                selectInput(user, label = NULL, choices = fromJSON(user[["DSTags"]]), selected = fromJSON(user[["DSTags"]]), multiple = TRUE, width = 400) # width="100%" seems the actual way to fill them up
                p(paste("BE:", paste(fromJSON(user[["BETags"]]), collapse = " - "))),
                p(paste("FE:", paste(fromJSON(user[["FETags"]]), collapse = " - "))),
                p(paste("DS:", paste(fromJSON(user[["DSTags"]]), collapse = " - ")))
@@ -403,16 +487,14 @@ shinyServer(function(input, output, session) {
       local({
         user <- users[i_user, ]
         output[[paste0("plot1", user['Name'])]] <- renderPlot({
-          color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
           par(mar = c(0,0,0,0))
           radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                     pcol = "black", pfcol = color, vlabel = c("", "", ""))
+                     pcol = "black", pfcol = color(user), vlabel = c("", "", ""))
         })
         output[[paste0("plot2", user['Name'])]] <- renderPlot({
-          color <- getHex(floor( -(c(user$DS, user$BE, user$FE) / 5)^1.5 * 150 + 250))
           par(mar = c(0,0,0,0))
           radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                     pcol = "black", pfcol = color, vlabel = c("", "", ""))
+                     pcol = "black", pfcol = color(user), vlabel = c("", "", ""))
         })
       })
     }
@@ -451,7 +533,8 @@ shinyServer(function(input, output, session) {
   
   
   
-  ### Debugging
+  ### Debugging #############################################
+  
   output$DEBUG <- renderPrint({
     #     print(profile())
     #     print(getListOfUsers())
@@ -469,4 +552,30 @@ shinyServer(function(input, output, session) {
     print(myProfile)
     print(distances)
   })
+  
+  ###########################################################
+  # Debug Area, from https://gist.github.com/ptoche/8405209 #
+  
+  output$Console <- renderUI({
+    btnTags <- function(){tags$style(type = 'text/css',"")}
+    if (is.null(input$console) || !nzchar(input$console) || input$console == 0) {
+      btnTags <- function(){tags$style(type = 'text/css'
+                                       , '#console {color: rgb(221,17,68);}'
+      )}
+    }
+    list(btnTags(),actionButton(inputId = "console", label = "console"))
+  })
+  
+  observe(label = "console", {
+    if (is.null(input$console) || !nzchar(input$console)) {return()}
+    if (input$console != 0) {
+      options(browserNLdisabled = TRUE)
+      saved_console <- ".RDuetConsole"
+      if (file.exists(saved_console)) {load(saved_console)}
+      isolate(browser())
+      save(file=saved_console,list=ls(environment()))
+    }
+  })
+  
+  
 })
