@@ -301,7 +301,7 @@ shinyServer(function(input, output, session) {
     
   })
   
-  # Clear data Listener
+  ## Clear data Listener
   observe({
     input$b_Clear
     # Default all values
@@ -318,6 +318,9 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, inputId = "s_FE", selected = "")
     #     output$LoginMessage <- renderText("Dashboard Cleared...")
   })
+  
+  
+  ## Button listeners
   
   # Listener for profile creation
   observe({
@@ -348,64 +351,53 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # Listener for profile update
-  observe({
-    if (!is.null(input$b_Update) && input$b_Update != 0){ 
-      # Check for missing info
-      if (isolate(User()['Name']) == "") {
-        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-        return
-      }
-      if (isolate(input$s_Password == "")) {
-        output$LoginMessage <- renderText("ERROR: No password provided.")
-        return
-      }
+  # Fuction for both other buttons
+  modifyUserBackend <- function( NoPasswordMessage, OkayAction ) {
+    # Check for missing info
+    if (isolate(User()['Name']) == "") {
+      output$LoginMessage <- renderText("ERROR: No pseudo provided.")
+    } else if (isolate(input$s_Password == "")) {
+      output$LoginMessage <- renderText(NoPasswordMessage) #TODO put in red
+    } else {
       user <- isolate(getUser(User()['Name']))
       # Check for non-existing user
       if (is.null(user)) {
         output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
-        return
-      } 
-      # Check for matching password
-      if (user$Password != isolate(User()['Password'])){
-        output$LoginMessage <- renderText("ERROR: The password doesn't match the records...")
-        return
+      } else if (user$Password != isolate(User()['Password'])){ # Check for matching password
+        output$LoginMessage <- renderText("The password doesn't match our records... Try again?")
+      } else {
+        tryCatch({
+          OkayAction(user)
+        },
+        error = function(e) {
+          output$LoginMessage <- renderText("ERROR:", e$message)
+        })
       }
-      # Load the user data
-      updateUser(User())
-      output$LoginMessage <- renderText("User data updated.")
-    }    
+    }
+  }
+  
+  # Listener for profile update
+  observe({
+    if (!is.null(input$b_Update) && input$b_Update != 0){ 
+      modifyUserBackend( "Please provide the matching password to update your Profile.",
+                         function(user) {
+                           # Update the user data
+                           updateUser(User())
+                           output$LoginMessage <- renderText("User data updated.")
+                         })
+    }  
   })
   
   # Listener for profile deletion
   observe({
     if (!is.null(input$b_Delete) && input$b_Delete != 0){ 
-      # Check for missing info
-      if (isolate(User()['Name']) == "") {
-        output$LoginMessage <- renderText("ERROR: No pseudo provided.")
-      }
-      else if (isolate(input$s_Password == "")) {
-        #         output$LoginMessage <- renderText(HTML('<font color="red"> Please type the password to delete this profile!</font>'))
-        output$LoginMessage <- renderText("Please type the password to delete this profile!") #TODO put in red
-      } else {
-        user <- isolate(getUser(User()['Name']))
-        # Check for non-existing user
-        if (is.null(user)) {
-          output$LoginMessage <- renderText("ERROR: The user with this pseudo doesn't exist yet.")
-        } else if (user$Password != isolate(User()['Password'])){ # Check for matching password
-          output$LoginMessage <- renderText("The password doesn't match the records... Try again?")
-        } else {
-          # Delete the user data
-          tryCatch({
-            deleteUser(user$Name)
-            output$LoginMessage <- renderText("User data Deleted.")
-          },
-          error = function(e) {
-            output$LoginMessage <- renderText("ERROR:", e$message)
-          })
-        }
-      }
-    }    
+      modifyUserBackend( "Please type the password to delete this profile!",
+                         function(user) {
+                           # Delete the user data
+                           deleteUser(user$Name)
+                           output$LoginMessage <- renderText("User data Deleted.")
+                         })
+    }  
   })
   
   
@@ -465,10 +457,28 @@ shinyServer(function(input, output, session) {
   })
   
   
+  ## Teammates profil pane ###########################################################  
+  
+  createShortProfileUIs <- function(users, plotPrefix) {
+    apply(users, 1, function(user) {
+      fluidRow(fluidRow(
+        column(4,
+               h4(user['Name'], align = "center"),
+               p(user['FirstName'],user['LastName'], align = "center")),
+        column(4,
+               plotOutput(paste0(plotPrefix, user['Name']), height = "80px")),
+        column(2,
+               p("Involvement:", align = "center"),
+               p(user[["Involvement"]], align = "center"))
+      )
+      )
+    })
+  }
+  
   output$Team1 <- renderUI({
     if (input$s_Name == "") {
-      output$Team2 <- renderUI(helpText("Load or Create your profile first"))
-      return(helpText("Load or Create your profile first"))
+      output$Team2 <- renderUI(helpText("Load or Create your profile first", align = "center"))
+      return(helpText("Load or Create your profile first", align = "center"))
     }
     users <- Users()
     if (input$b_FilterDatasets) {
@@ -500,33 +510,9 @@ shinyServer(function(input, output, session) {
     }
     ## Define the other team representation
     output$Team2 <- renderUI({
-      return(apply(users2, 1, function(user) {
-        fluidRow(fluidRow(
-          column(4,
-                 h4(user['Name'], align = "center"),
-                 p(user['FirstName'],user['LastName'], align = "center")),
-          column(4,
-                 plotOutput(paste0("plot2", user['Name']), height = "80px")),
-          column(2,
-                 p("Involvement:", align = "center"),
-                 p(user[["Involvement"]], align = "center"))
-        )
-        )
-      }))
+      return(createShortProfileUIs(users2, "plot"))
     })
-    return(apply(users1, 1, function(user) {
-      fluidRow(fluidRow(
-        column(4,
-               h4(user['Name'], align = "center"),
-               p(user['FirstName'],user['LastName'], align = "center")),
-        column(4,
-               plotOutput(paste0("plot1", user['Name']), height = "80px")),
-        column(2,
-               p("Involvement:", align = "center"),
-               p(user[["Involvement"]], align = "center"))
-      )
-      )
-    }))
+    return(createShortProfileUIs(users1, "plot1"))
     
   })
   
