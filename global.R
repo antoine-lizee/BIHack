@@ -9,7 +9,7 @@
 library(shiny)
 # debuging
 options(shiny.trace=TRUE)
-options(shiny.error=traceback)
+options(shiny.error=browser)
 # radarplot
 library(fmsb)
 # "back-end"
@@ -20,9 +20,9 @@ library(rjson) # less powerfule but does a better job for quick conversions (wit
 
 # Static info -------------------------------------------------------------
 
-listOfSkills <- list(BE = c("Python", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Django", "SQL", "noSQL", "ruby", "ROR"),
-                     FE = c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android"),
-                     DS = c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats"))
+listOfSkills <- list(BE = c("Python", "C#", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Django", "SQL", "noSQL", "ruby", "ROR"),
+                     FE = c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android", "HTML5", "Flash"),
+                     DS = c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats", "MATLAB"))
 
 listOfDatasets <- list("Education" = c("01 - Help Teachers Get What They Need", 
                                        "04 - Help Donors Choose Better Serve Teachers"),

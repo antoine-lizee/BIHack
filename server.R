@@ -132,6 +132,7 @@ shinyServer(function(input, output, session) {
   session$onFlushed(function() {
     values$starting <- FALSE
     values$loadingProfile <- FALSE
+    cat("##### DEBUG: loading Profile OFF ##############\n", file = stderr())
   }, once = FALSE)
   
   # Closing connection
@@ -178,17 +179,18 @@ shinyServer(function(input, output, session) {
   }
   
   output$radarPlot <- renderPlot({
-    # Doesn't work as expected
-    #     if (values$loadingProfile) {
-    #       #       cat("##### DEBUG", file = stderr())
-    #       invalidateLater(2000, session)
-    #     } else {
-    # draw radar chart
-    user <- User()
-    par(mar = c(0,0,0,0))
-    radarchart(df = plotData(user), axistype = 0, seg = 5, 
-               pcol = "black", pfcol = color(user))
-    #     }
+    #     Doesn't work as expected
+    if (values$loadingProfile) {
+            cat("##### DEBUG: loading Profile still on ##############\n", file = stderr())
+      #       invalidateLater(2000, session)
+      "Loading Profile"      
+    } else {
+      #       draw radar chart
+      user <- User()
+      par(mar = c(0,0,0,0))
+      radarchart(df = plotData(user), axistype = 0, seg = 5, 
+                 pcol = "black", pfcol = color(user))
+    }
   })
   
   
@@ -223,7 +225,7 @@ shinyServer(function(input, output, session) {
   
   # Login selectize
   output$LoginField <- renderUI(
-    selectizeInput(inputId = "s_Name", label = "Select or Create a pseudo below", 
+    selectizeInput(inputId = "s_Name", label = "Select or Type a login below:", 
                    choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
                    options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
   )
@@ -256,46 +258,48 @@ shinyServer(function(input, output, session) {
   ## Main listener for the login and password field.
   output$LoginAction <- renderUI({
     
-    #     if (values$starting) {
-    #       return(helpText("Loading..."))
-    #     }
-    
-    if (input$s_Name == "") { #Listen and check for the name inbox
-      return(
-        wellPanel(
-          p("Choose or Create a login to start.")))
-    }
-    
-    # Check if user is in database
-    if (!is.null(user <- getUser(input$s_Name))) {
-      # Load the user data
-      values$loadingProfile <- TRUE
-      updateTextInput(session, inputId = "s_Password", value = "")
-      updateTextInput(session, inputId = "s_FirstName", value = user[["FirstName"]])
-      updateTextInput(session, inputId = "s_LastName", value = user[["LastName"]])
-      updateSliderInput(session, inputId = "i_DS", value = user[["DS"]])
-      updateSliderInput(session, inputId = "i_BE", value = user[["BE"]])
-      updateSliderInput(session, inputId = "i_FE", value = user[["FE"]])
-      updateSliderInput(session, inputId = "i_Involvement", value = user[["Involvement"]])
-      updateSelectInput(session, inputId = "s_Datasets", selected = fromJSON(user[["Datasets"]]))
-      updateSelectInput(session, inputId = "s_DS", selected = ifelseFun(fromJSON(user[["DSTags"]]), "", is.null))
-      updateSelectInput(session, inputId = "s_BE", selected = ifelseFun(fromJSON(user[["BETags"]]), "", is.null))
-      updateSelectInput(session, inputId = "s_FE", selected = ifelseFun(fromJSON(user[["FETags"]]), "", is.null))
-      output$LoginMessage <- renderText( "User Loaded.")
-      return(loggedInUI)  
+    if (values$starting) {
+      return(helpText("Loading..."))
     } else {
-      # Check if the password field is empty
-      if (input$s_Password == "") {
+      
+      if (input$s_Name == "") { #Listen and check for the name inbox
         return(
           wellPanel(
-            p("Create a weak, non-important password to be sure nobody edits your profile by mistake")
-          ))
+            p("Choose a login to load the corresponding profile or type a login to create your profile.")))
+      }
+      
+      # Check if user is in database
+      if (!is.null(user <- getUser(input$s_Name))) {
+        # Load the user data
+        cat("##### DEBUG: loading Profile ON ##############\n", file = stderr())
+        values$loadingProfile <- TRUE
+        updateTextInput(session, inputId = "s_Password", value = "")
+        updateTextInput(session, inputId = "s_FirstName", value = user[["FirstName"]])
+        updateTextInput(session, inputId = "s_LastName", value = user[["LastName"]])
+        updateSliderInput(session, inputId = "i_DS", value = user[["DS"]])
+        updateSliderInput(session, inputId = "i_BE", value = user[["BE"]])
+        updateSliderInput(session, inputId = "i_FE", value = user[["FE"]])
+        updateSliderInput(session, inputId = "i_Involvement", value = user[["Involvement"]])
+        updateSelectInput(session, inputId = "s_Datasets", selected = fromJSON(user[["Datasets"]]))
+        updateSelectInput(session, inputId = "s_DS", selected = ifelseFun(fromJSON(user[["DSTags"]]), "", is.null))
+        updateSelectInput(session, inputId = "s_BE", selected = ifelseFun(fromJSON(user[["BETags"]]), "", is.null))
+        updateSelectInput(session, inputId = "s_FE", selected = ifelseFun(fromJSON(user[["FETags"]]), "", is.null))
+        output$LoginMessage <- renderText( "User Loaded.")
+        return(loggedInUI)  
       } else {
-        output$LoginMessage <- renderText("Don't forget to save your profile!")
-        # Reset personal info
-        updateTextInput(session, inputId = "s_FirstName", value = "")
-        updateTextInput(session, inputId = "s_LastName", value = "")
-        return(firstLoggingUI)  
+        # Check if the password field is empty
+        if (input$s_Password == "") {
+          return(
+            wellPanel(
+              p("Create a weak, non-important password to be sure nobody edits your profile by mistake")
+            ))
+        } else {
+          output$LoginMessage <- renderText("Don't forget to save your profile!")
+          # Reset personal info
+          updateTextInput(session, inputId = "s_FirstName", value = "")
+          updateTextInput(session, inputId = "s_LastName", value = "")
+          return(firstLoggingUI)  
+        }
       }
     }
     
@@ -340,9 +344,10 @@ shinyServer(function(input, output, session) {
           return()
         } else {
           tryCatch({
-            createUser(isolate(User()))
-            output$LoginMessage <- renderText("User Created")
-            output$LoginUI <- loggedInUI
+            #             createUser(isolate(User()))
+            #             output$LoginMessage <- renderText("User Created")
+            #             output$LoginUI <- loggedInUI
+            stop("TEST")
           }, error = function(e) {
             output$LoginMessage <- renderText("ERROR: ", e$message)
           })
@@ -396,6 +401,8 @@ shinyServer(function(input, output, session) {
                            # Delete the user data
                            deleteUser(user$Name)
                            output$LoginMessage <- renderText("User data Deleted.")
+                           updateTextInput(session, inputId = "s_Name", value = "")
+                           updateTextInput(session, inputId = "s_Password", value = "")
                          })
     }  
   })
@@ -525,18 +532,18 @@ shinyServer(function(input, output, session) {
     #     print(profile())
     #     print(getListOfUsers())
     #     dput(User())
-    #     print(User())
+    print(User())
     #     if (!is.null(getUser(User()['Name'])))
     #       print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
     #     print(users)
-    users <- Users()
-    myProfile <- profile()
-    profiles <- apply(users[c("DS", "BE", "FE")], 1, getProfile)
-    distances <- abs(profiles[1,] - myProfile[1]) + abs(profiles[2,] - myProfile[2])
-    print(users)
-    print(profiles)
-    print(myProfile)
-    print(distances)
+    #     users <- Users()
+    #     myProfile <- profile()
+    #     profiles <- apply(users[c("DS", "BE", "FE")], 1, getProfile)
+    #     distances <- abs(profiles[1,] - myProfile[1]) + abs(profiles[2,] - myProfile[2])
+    #     print(users)
+    #     print(profiles)
+    #     print(myProfile)
+    #     print(distances)
   })
   
   ###########################################################
