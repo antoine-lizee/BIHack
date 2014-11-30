@@ -1,0 +1,12 @@
+.dl-horizontal dt 
+{
+    /*white-space: normal;*/
+    /*overflow: visible;*/
+    width: 220px;
+    /*margin-right: 8px;*/
+}
+
+.dl-horizontal dd
+{
+    margin-left: 240px;
+}

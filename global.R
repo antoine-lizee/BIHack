@@ -4,12 +4,14 @@
 # Copyright Antoine Lizee 11/2014 antoine.lizee@gmail.com. See the license included in the project.
 
 
+
+# Switches ----------------------------------------------------------------
+
+b_DEBUG = FALSE
+
 # libraries ---------------------------------------------------------------
 
 library(shiny)
-# debuging
-options(shiny.trace=TRUE)
-options(shiny.error=browser)
 # radarplot
 library(fmsb)
 # "back-end"
@@ -17,6 +19,11 @@ library(RSQLite)
 # library(jsonlite) 
 library(rjson) # less powerfule but does a better job for quick conversions (without classes)
 
+# debuging
+if (b_DEBUG) {
+  options(shiny.trace=FALSE)
+  options(shiny.error=browser)
+}
 
 # Static info -------------------------------------------------------------
 
@@ -59,8 +66,7 @@ userTableName <- "BIH_users"
 # Password field:
 passwordInput <- function (inputId, label, value = "") 
 {
-  
   tagList(shiny:::`%AND%`(label, tags$label(label, `for` = inputId)), tags$input(id = inputId, 
-                                                                     type = "password", value = value))
+                                                                                 type = "password", value = value))
 }
 

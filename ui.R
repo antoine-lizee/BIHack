@@ -6,16 +6,9 @@
 # Copyright Antoine Lizee 11/2014 antoine.lizee@gmail.com. See the license included in the project.
 
 
-
 library(shiny)
 
-# inspired from https://gist.github.com/ptoche/8405209, see bottom of page
-footerPanel <- function(...) {
-  div(class="footer", hr(), ...)
-}
-
 shinyUI(navbarPage(
-  
   "The Hackathoner Profiler",
   tabPanel("Your Profile",
            fluidPage(
@@ -101,19 +94,14 @@ shinyUI(navbarPage(
   tabPanel("Remarks",
            includeHTML("remarks.html")
   ),
-  tabPanel("Debug",
-           fluidRow(column(2,uiOutput("Console")),
-                    column(10, 
-                           helpText(HTML("The console should display a Browse prompt: <code>Browse[1]></code>")),
-                           helpText(HTML("Enter <code>c</code> at the prompt to stop communication with the console and resume with the shiny app")))
-           ),
-           br(),
-           verbatimTextOutput("DEBUG")
-  ),
+  #   tabPanel("Debug",
+  #            uiOutput("DEBUGPanel")
+  #   ),
+  source("debugUI.R", local = TRUE)$value,
   hr(),
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
   
-  
+  #### CSS & additional scripts ###########
   includeCSS("www/quickPatches.css")
 ))
 

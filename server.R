@@ -28,17 +28,20 @@ shinyServer(function(input, output, session) {
   ### Session management ####################
   
   ## Geting the connection.
-  # Three solution: sourcing the utilities here (non optimal launching of the session),
-  #   using one connection for all (outside the server function), 
-  #   passing around the connection. We use the second one for now, relying on the single-threaded operation of the app. (shiny-server non-pro)
-#   con <- getCon() # One connection to the data base per user connection. Better or worse?
-#   sendDEBUG("Opening connection")
-#   browser()
-#   # Closing connection
-#   session$onSessionEnded(function(){
-#     sendDEBUG("Closing db connection")
-#     #     closeCon(con)
-#   })
+  # Three solution: 
+  #   - sourcing the utilities here (non optimal launching of the session), or copying and attaching a "utilities" environment created earlier
+  #   - using one connection for all (outside the server function), 
+  #   - passing around the connection. 
+  #   We use the second one for now, relying on the single-threaded operation of the app. (shiny-server non-pro)
+  
+  #   con <- getCon()
+  #   sendDEBUG("Opening connection")
+  #   browser()
+  #   # Closing connection
+  #   session$onSessionEnded(function(){
+  #     sendDEBUG("Closing db connection")
+  #     #     closeCon(con)
+  #   })
   
   ## Timing & schedule (hardly necessary)
   values <- reactiveValues(starting = TRUE,
@@ -129,7 +132,7 @@ shinyServer(function(input, output, session) {
   
   # Login selectize
   output$LoginField <- renderUI({
-    sendDEBUG("Rendering login field")
+#     sendDEBUG("Rendering login field")
     selectizeInput(inputId = "s_Name", label = "Select or Type a login below:", 
                    choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
                    options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
@@ -426,47 +429,8 @@ shinyServer(function(input, output, session) {
   
   ### Debugging #############################################
   
-  output$DEBUG <- renderPrint({
-    #     print(profile())
-    #     print(getListOfUsers())
-    #     dput(User())
-    print(User())
-    #     if (!is.null(getUser(User()['Name'])))
-    #       print(fromJSON(getUser(User()['Name'])[["DSTags"]]))
-    #     print(users)
-    #     users <- Users()
-    #     myProfile <- profile()
-    #     profiles <- apply(users[c("DS", "BE", "FE")], 1, getProfile)
-    #     distances <- abs(profiles[1,] - myProfile[1]) + abs(profiles[2,] - myProfile[2])
-    #     print(users)
-    #     print(profiles)
-    #     print(myProfile)
-    #     print(distances)
-  })
-  
-  ###########################################################
-  # Debug Area, from https://gist.github.com/ptoche/8405209 #
-  
-  output$Console <- renderUI({
-    btnTags <- function(){tags$style(type = 'text/css',"")}
-    if (is.null(input$console) || !nzchar(input$console) || input$console == 0) {
-      btnTags <- function(){tags$style(type = 'text/css'
-                                       , '#console {color: rgb(221,17,68);}'
-      )}
-    }
-    list(btnTags(),actionButton(inputId = "console", label = "console - DEBUG"))
-  })
-  
-  observe(label = "console", {
-    if (is.null(input$console) || !nzchar(input$console)) {return()}
-    if (input$console != 0) {
-      options(browserNLdisabled = TRUE)
-      saved_console <- ".RDuetConsole"
-      if (file.exists(saved_console)) {load(saved_console)}
-      isolate(browser())
-      save(file=saved_console,list=ls(environment()))
-    }
-  })
-  
+  if (b_DEBUG) {
+    source("debugS.R", local = TRUE)
+  }
   
 })
