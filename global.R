@@ -53,3 +53,14 @@ user0 <- data.frame(Name = "USER0", Password = "765",
 userDBName <- "BIH_users.sqlite"
 userTableName <- "BIH_users"
 
+
+# Misc tool for the ui script ---------------------------------------------------------------
+
+# Password field:
+passwordInput <- function (inputId, label, value = "") 
+{
+  
+  tagList(shiny:::`%AND%`(label, tags$label(label, `for` = inputId)), tags$input(id = inputId, 
+                                                                     type = "password", value = value))
+}
+

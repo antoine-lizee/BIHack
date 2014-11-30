@@ -15,6 +15,7 @@ footerPanel <- function(...) {
 }
 
 shinyUI(navbarPage(
+  
   "The Hackathoner Profiler",
   tabPanel("Your Profile",
            fluidPage(
@@ -83,25 +84,6 @@ shinyUI(navbarPage(
            hr(),
            uiOutput("AllProfiles1")
   ),
-  #   tabPanel("Find your Team",
-  #            fluidRow(
-  #              column(4, offset = 1, h3("Choose some teammates")),
-  #              column(3, offset = 2, checkboxInput(inputId = "b_FilterDatasets", "Filter for common datasets"))),
-  #            hr(),
-  #            fluidRow(column(4,
-  #                            h4("Like-minded people", align = "center"),
-  #                            uiOutput("Team1")),
-  #                     column(8,
-  #                            h4("Complementary people", align = "center")),
-  #                     fluidRow(
-  #                       column(6,
-  #                              div(class="thin_vertical_line", style="position:absolute;left:-15px;height:70%;top:0px;"),
-  #                              uiOutput("Team2")),
-  #                       column(6,
-  #                              uiOutput("Team3")))
-  #            )
-  #            
-  #   ),
   tabPanel("Find your Team",
            fluidRow(
              column(4, offset = 1, h3("Choose some teammates")),
@@ -117,13 +99,7 @@ shinyUI(navbarPage(
            
   ),
   tabPanel("Remarks",
-           h3("A few gotchas..."),
-           br(),
-           h4("Foreword: Security"),
-           p("No, this app is not secure, and is not meant to be. More on that later, but you should be aware that the passwords are not hashed at any point. Use the webapp for testing only and Re-use the code responsibly."),
-           h4("Why?"),
-           p("I took part in the - amazing - ", a("Bayes Impact Hackathon", href = "http://www.bayesimpact.org/hack"), "on November 15/16, and was a bit frustrated by the inability to team up efficiently if you didn't know personally the people you wanted to be in.\
-             I began to think a couple of days before of a solution that would be interesting to try.")
+           includeHTML("remarks.html")
   ),
   tabPanel("Debug",
            fluidRow(column(2,uiOutput("Console")),
@@ -135,8 +111,10 @@ shinyUI(navbarPage(
            verbatimTextOutput("DEBUG")
   ),
   hr(),
-  p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right")
+  p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
   
+  
+  includeCSS("www/quickPatches.css")
 ))
 
 

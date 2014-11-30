@@ -5,118 +5,21 @@
 
 
 
-# Functions ---------------------------------------------------------------
+# Initialization ----------------------------------------------------------
 
-## UTILITIES #######
+source("utilities.R", local = TRUE) # local = TRUE is actually not necessary here, just a bit cleaner (no need to go up to fetch the utilities for the global env.)
 
-getCartCoord <- function(V) {
-  r <- V[1]
-  theta <- V[2]
-  r * c(cos(theta), sin(theta))
+# Initialization of the db
+con0 <- getCon()
+if (!dbExistsTable(con0, userTableName)) {
+  dbWriteTable(con0, name = userTableName, value = user0, row.names = F)
+  dbGetQuery(con0, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
 }
-
-getPolarCoord <- function(V) {
-  x <- V[1]
-  y <- V[2]
-  c(r = sqrt(x^2 + y^2), theta = atan2(y,x) %% (2*pi))
-}
-
-getHex <- function(RGB) {
-  paste0("#", paste(sapply(RGB, function(i) as.character(as.hexmode(i))), collapse = ""))
-}
-
-ifelseFun <- function(vec, ifVec, fun, ...) {
-  resVec <- fun(vec, ...)
-  if (length(resVec) == 1){
-    if (resVec) {
-      return(ifVec)
-    } else {
-      return(vec)
-    }
-  } else {
-    return(ifelse(resVec, ifVec, vec))
-  }
-}
-# Tested like that:
-ifelseFun(c(1,2,NA,3), 0, is.na)
-ifelseFun(c(1,2,NA,3), "", is.null)
-ifelseFun(NULL, "", is.null)
-
-
-
-## BACKEND - Database  #######
-
-# Functions
-getCon <- function() {
-  RSQLite::dbConnect(RSQLite::SQLite(), userDBName, cache_size = 5000, synchronous = "full")
-}
-
-closeCon <- function(con) {
-  RSQLite::dbDisconnect(con)
-}
-
-getUser <- function(Name) {
-  user <- dbGetQuery(con, paste0("SELECT * FROM ", userTableName, " WHERE Name = '", Name, "'"))
-  if (nrow(user) == 0) {
-    return(NULL)
-  } else {
-    return(user)
-  }
-}
-
-unpackDF <- function(User) {
-  stopifnot(nrow(User) == 1)
-  modDf <- sapply(User, 
-                  function(col) { 
-                    if(is.character(col)) 
-                      paste0("'", col, "'")
-                    else
-                      col
-                  })
-  return(paste0("( ", paste(modDf, collapse = ", "), ")"))
-}
-
-createUser <- function(User) {
-  if (User$Name == "") {
-    warning("No name provided for the user")
-    return(FALSE)
-  }
-  dbSendQuery(con, paste0("INSERT INTO ", userTableName, " VALUES ", unpackDF(User)))
-}
-
-updateUser <- function(User) {
-  if (User$Name == "") {
-    warning("No name provided for the user")
-    return(FALSE)
-  }
-  ## UGLY update hack
-  dbGetQuery(con, paste0("DELETE FROM ", userTableName, " WHERE Name = '", User$Name,"'"))
-  dbSendQuery(con, paste0("INSERT INTO ", userTableName, " VALUES ", unpackDF(User)))
-}
-
-deleteUser <- function(Name) {
-  dbGetQuery(con, paste0("DELETE FROM ", userTableName, " WHERE Name = '", Name,"'"))
-}
-
-getListOfUsers <- function() {
-  sort(dbGetQuery(con, paste("SELECT Name FROM", userTableName))[[1]])
-}
-
-getUserTable <- function() {
-  dbReadTable(con, userTableName)
-}
-
-# Initialization
-con <- getCon()
-if (!dbExistsTable(con, userTableName)) {
-  dbWriteTable(con, name = userTableName, value = user0, row.names = F)
-  dbGetQuery(con, paste("DELETE FROM", userTableName, "WHERE Name = 'USER0'"))
-}
+closeCon(con0)
+con <- getCon() # see line 30
 # # Reset code:
 # dbDisconnect(con)
 # file.remove(userDBName)
-
-
 
 # Server definition -------------------------------------------------------
 
@@ -124,21 +27,28 @@ shinyServer(function(input, output, session) {
   
   ### Session management ####################
   
-  con <- getCon()
+  ## Geting the connection.
+  # Three solution: sourcing the utilities here (non optimal launching of the session),
+  #   using one connection for all (outside the server function), 
+  #   passing around the connection. We use the second one for now, relying on the single-threaded operation of the app. (shiny-server non-pro)
+#   con <- getCon() # One connection to the data base per user connection. Better or worse?
+#   sendDEBUG("Opening connection")
+#   browser()
+#   # Closing connection
+#   session$onSessionEnded(function(){
+#     sendDEBUG("Closing db connection")
+#     #     closeCon(con)
+#   })
   
-  # Timing & schedule (hardly necessary)
+  ## Timing & schedule (hardly necessary)
   values <- reactiveValues(starting = TRUE,
-                           loadingProfile = FALSE)
+                           loadingProfile = FALSE
+  )
   session$onFlushed(function() {
     values$starting <- FALSE
     values$loadingProfile <- FALSE
-    cat("##### DEBUG: loading Profile OFF ##############\n", file = stderr())
+    #     sendDEBUG("loading Profile OFF")
   }, once = FALSE)
-  
-  # Closing connection
-  session$onSessionEnded(function(){
-    closeCon(con)
-  })
   
   
   ### DATA Unpacking ####################
@@ -179,30 +89,24 @@ shinyServer(function(input, output, session) {
   }
   
   output$radarPlot <- renderPlot({
-    #     Doesn't work as expected
-    if (values$loadingProfile) {
-            cat("##### DEBUG: loading Profile still on ##############\n", file = stderr())
-      #       invalidateLater(2000, session)
-      "Loading Profile"      
-    } else {
-      #       draw radar chart
-      user <- User()
-      par(mar = c(0,0,0,0))
-      radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                 pcol = "black", pfcol = color(user))
-    }
+    #     #     Doesn't work as expected, because the three variables i_X are updated all at once with 
+    #     #     3 calls to "updateSelectInput()" but are sent back to the server one by one. (Shiny BUG/limitation ?)
+    #     #     see the stackoverflow relevant question     
+    #     if (values$loadingProfile) {
+    #             sendDEBUG("loading Profile still ON")
+    #       #       invalidateLater(2000, session)
+    #       "Loading Profile"      
+    #     } else {
+    #       draw radar chart
+    user <- User()
+    par(mar = c(0,0,0,0))
+    radarchart(df = plotData(user), axistype = 0, seg = 5, 
+               pcol = "black", pfcol = color(user))
+    #     }
   })
   
   
   ### PROFILE  ####################
-  
-  getProfile <- function(DBF) {
-    getPolarCoord(apply(
-      apply(
-        matrix(c(DBF, 0:2 * 2*pi/3 + pi/2), nrow = 2, byrow = 3),
-        2, getCartCoord), 
-      1, sum))
-  }
   
   profile <- reactive({
     getProfile(c(DS(), BE(), FE()))
@@ -224,11 +128,12 @@ shinyServer(function(input, output, session) {
   ### UIs  ####################
   
   # Login selectize
-  output$LoginField <- renderUI(
+  output$LoginField <- renderUI({
+    sendDEBUG("Rendering login field")
     selectizeInput(inputId = "s_Name", label = "Select or Type a login below:", 
                    choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
                    options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
-  )
+  })
   # Update the choices
   #   observe({
   #     input$b_Login
@@ -271,7 +176,7 @@ shinyServer(function(input, output, session) {
       # Check if user is in database
       if (!is.null(user <- getUser(input$s_Name))) {
         # Load the user data
-        cat("##### DEBUG: loading Profile ON ##############\n", file = stderr())
+        #         sendDEBUG("loading Profile ON")
         values$loadingProfile <- TRUE
         updateTextInput(session, inputId = "s_Password", value = "")
         updateTextInput(session, inputId = "s_FirstName", value = user[["FirstName"]])
@@ -305,6 +210,8 @@ shinyServer(function(input, output, session) {
     
   })
   
+  ## Button listeners
+  
   ## Clear data Listener
   observe({
     input$b_Clear
@@ -322,9 +229,6 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, inputId = "s_FE", selected = "")
     #     output$LoginMessage <- renderText("Dashboard Cleared...")
   })
-  
-  
-  ## Button listeners
   
   # Listener for profile creation
   observe({
@@ -356,7 +260,7 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # Fuction for both other buttons
+  # Fuction for profile modification
   modifyUserBackend <- function( NoPasswordMessage, OkayAction ) {
     # Check for missing info
     if (isolate(User()['Name']) == "") {
@@ -446,13 +350,7 @@ shinyServer(function(input, output, session) {
                                                                       value=(datasetName %in% substr(fromJSON(user[["Datasets"]]), 1, 2))))
                                    } )
                ))),
-        #         column(4,
-        #                selectInput(paste0("bla", 1), label = "Datasets", 
-        #                            choices = unname(substr(unlist(listOfDatasets),1,2)), selected = substr(fromJSON(user[["Datasets"]]), 1, 2), multiple = TRUE)),
         column(5,
-               #                selectInput(user, label = NULL, choices = fromJSON(user[["BETags"]]), selected = fromJSON(user[["BETags"]]), multiple = TRUE, width = 400),
-               #                selectInput(user, label = NULL, choices = fromJSON(user[["FETags"]]), selected = fromJSON(user[["FETags"]]), multiple = TRUE, width = 400),
-               #                selectInput(user, label = NULL, choices = fromJSON(user[["DSTags"]]), selected = fromJSON(user[["DSTags"]]), multiple = TRUE, width = 400) # width="100%" seems the actual way to fill them up
                p(paste("BE:", paste(fromJSON(user[["BETags"]]), collapse = " - "))),
                p(paste("FE:", paste(fromJSON(user[["FETags"]]), collapse = " - "))),
                p(paste("DS:", paste(fromJSON(user[["DSTags"]]), collapse = " - ")))
@@ -517,7 +415,7 @@ shinyServer(function(input, output, session) {
     }
     ## Define the other team representation
     output$Team2 <- renderUI({
-      return(createShortProfileUIs(users2, "plot"))
+      return(createShortProfileUIs(users2, "plot2"))
     })
     return(createShortProfileUIs(users1, "plot1"))
     
