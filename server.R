@@ -253,7 +253,7 @@ shinyServer(function(input, output, session) {
           tryCatch({
             createUser(isolate(User()))
             output$LoginMessage <- renderText("User Created")
-            output$LoginUI <- loggedInUI
+            output$LoginAction <- renderUI(loggedInUI)
           }, error = function(e) {
             output$LoginMessage <- renderText(paste("ERROR: ", e$message))
           })
