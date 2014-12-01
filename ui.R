@@ -92,12 +92,12 @@ shinyUI(navbarPage(
            
   ),
   tabPanel("Remarks",
-           includeHTML("remarks.html")
+           includeHTML("www/remarks.html")
   ),
   #   tabPanel("Debug",
   #            uiOutput("DEBUGPanel")
   #   ),
-  source("debugUI.R", local = TRUE)$value,
+  source("ui/debugUI.R", local = TRUE)$value,
   hr(),
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
   

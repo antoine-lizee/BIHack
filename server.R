@@ -7,7 +7,7 @@
 
 # Initialization ----------------------------------------------------------
 
-source("utilities.R", local = TRUE) # local = TRUE is actually not necessary here, just a bit cleaner (no need to go up to fetch the utilities for the global env.)
+source("server/utilities.R", local = TRUE) # local = TRUE is actually not necessary here, just a bit cleaner (no need to go up to fetch the utilities for the global env.)
 
 # Initialization of the db
 con0 <- getCon()
@@ -132,7 +132,7 @@ shinyServer(function(input, output, session) {
   
   # Login selectize
   output$LoginField <- renderUI({
-#     sendDEBUG("Rendering login field")
+    #     sendDEBUG("Rendering login field")
     selectizeInput(inputId = "s_Name", label = "Select or Type a login below:", 
                    choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
                    options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
@@ -251,12 +251,11 @@ shinyServer(function(input, output, session) {
           return()
         } else {
           tryCatch({
-            #             createUser(isolate(User()))
-            #             output$LoginMessage <- renderText("User Created")
-            #             output$LoginUI <- loggedInUI
-            stop("TEST")
+            createUser(isolate(User()))
+            output$LoginMessage <- renderText("User Created")
+            output$LoginUI <- loggedInUI
           }, error = function(e) {
-            output$LoginMessage <- renderText("ERROR: ", e$message)
+            output$LoginMessage <- renderText(paste("ERROR: ", e$message))
           })
         }
       }
@@ -264,12 +263,12 @@ shinyServer(function(input, output, session) {
   })
   
   # Fuction for profile modification
-  modifyUserBackend <- function( NoPasswordMessage, OkayAction ) {
+  modifyUserBackend <- function( noPasswordMessage, okayAction ) {
     # Check for missing info
     if (isolate(User()['Name']) == "") {
       output$LoginMessage <- renderText("ERROR: No pseudo provided.")
     } else if (isolate(input$s_Password == "")) {
-      output$LoginMessage <- renderText(NoPasswordMessage) #TODO put in red
+      output$LoginMessage <- renderText(noPasswordMessage) #TODO put in red
     } else {
       user <- isolate(getUser(User()['Name']))
       # Check for non-existing user
@@ -279,10 +278,10 @@ shinyServer(function(input, output, session) {
         output$LoginMessage <- renderText("The password doesn't match our records... Try again?")
       } else {
         tryCatch({
-          OkayAction(user)
+          okayAction(user)
         },
         error = function(e) {
-          output$LoginMessage <- renderText("ERROR:", e$message)
+          output$LoginMessage <- renderText(paste("ERROR:", e$message))
         })
       }
     }
@@ -430,7 +429,7 @@ shinyServer(function(input, output, session) {
   ### Debugging #############################################
   
   if (b_DEBUG) {
-    source("debugS.R", local = TRUE)
+    source("server/debugS.R", local = TRUE)
   }
   
 })

@@ -7,7 +7,7 @@
 
 # Switches ----------------------------------------------------------------
 
-b_DEBUG = FALSE
+b_DEBUG = TRUE
 
 # libraries ---------------------------------------------------------------
 
@@ -57,7 +57,7 @@ user0 <- data.frame(Name = "USER0", Password = "765",
                     Involvement = 2,
                     stringsAsFactors = F)
 
-userDBName <- "BIH_users.sqlite"
+userDBName <- "data/BIH_users.sqlite"
 userTableName <- "BIH_users"
 
 
