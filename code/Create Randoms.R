@@ -6,6 +6,7 @@
 
 
 source("global.R")
+source("server/utilities.R")
 library(jsonlite)
 randomNames <- fromJSON('http://api.randomuser.me/?results=25')
 NR <- nrow(randomNames$results)
@@ -23,7 +24,7 @@ randomUsers <- data.frame(Name = randomNames$results$user$username , Password = 
                           Involvement = sample(5, NR, replace = T),
                           stringsAsFactors = F)
 
-con <- RSQLite::dbConnect(SQLite(), userDBName, cache_size = 5000, synchronous = "full")
+con <- RSQLite::dbConnect(SQLite(), userDBPath)
 # getUserTable() has to be evaluated from the server sript
 userTableFinal <- rbind(getUserTable(), randomUsers)
 dbWriteTable(con, name = userTableName, value = userTableFinal, row.names = F, overwrite = T)
