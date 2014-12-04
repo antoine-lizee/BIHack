@@ -89,7 +89,6 @@ shinyUI(navbarPage(
   ),
   hr(),
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
-  hr(),
   source("ui/debugUI.R", local = TRUE)$value,
   
   #### CSS & additional scripts ###########
