@@ -21,9 +21,10 @@ It is also a showcase of what can be done with <a ref = "http://shiny.rstudio.co
   This last point is crucial, as sometimes development speed is really, really, decreased because debugging tools are non-existent or not straightforward to use. This can be a problem for the development of applications whose complexity lies not only in the ported R code.</p>
 <p>Yet, <strong>it is possible</strong>: it might not be the perfect framework to develop such a webApp, but at least it <em>is</em> doable in Shiny. I am glad to know that anything I want to quickly share with friends & colleagues can be done so easily, without touching any classic web-tool. 
   In addition, Shiny is quite intensively developped currently, and will only get better.</p>
- <h4>Future development</h4>
+ <h4>Future development (a.k.a. if I had unlimited time)</h4>
  <p>I'd like to develop more "Ry" features that can quickly been implemented on the top of the existing data, like a summary pane describing the population of registered hackers.</p>
  <p>More on the engineering side, the two panels that show the participants are insanely slow to load if there is 40+ people to show. This could be hugely improved by not creating the plots on the fly each time the page is loaded, but instead creating them at user creation or update and store them.</p>
+ <p>Design is good enough thanks to the bootstrap theme, but I still find a lot of things ugly. Visualizations in particular could be more sleek and interactive.</p>
  <h4>More on Security</h4>
  <p>The app is absolutely not secure, but it isn't the point. The data that participants share here is not meant to be private, and there is enough emphasis at password creation to not choose your favorite one.
    If one wanted to secure the app, here are the few necessary steps that should be implemented <em> altogether</em> :</p>
