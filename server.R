@@ -406,9 +406,11 @@ shinyServer(function(input, output, session) {
     users <- users[!users$Name %in% input$s_Name,]
     if (input$b_FilterDatasets) {
       myDatasets <- fromJSON(User()[["Datasets"]])
-      users <- users[sapply(users$Datasets, function(udi) {
+      data_index <- sapply(users$Datasets, function(udi) {
         length(intersect(myDatasets, fromJSON(udi))) != 0
-      }),]
+      })
+#       sendDEBUG(capture.output(summary(data_index)))
+      users <- users[data_index,]
     }
     myProfile <- profile()
     profiles <- apply(users[c("DS", "BE", "FE")], 1, getProfile)
@@ -416,12 +418,12 @@ shinyServer(function(input, output, session) {
     users1 <- users[order(distances),]
     users2 <- users[order(-distances),]
     ## Define the graph outputs
-    t <- proc.time()
+#     t <- proc.time()
     createPlots(users)
-    sendDEBUG("created plots in:", ((t1 <- proc.time()) - t)[2])
+#     sendDEBUG("created plots in:", ((t1 <- proc.time()) - t)[2])
     assignPlots("plot1")
     assignPlots("plot2")
-    sendDEBUG("assigned plots in:", ((t2 <- proc.time()) - t1)[2]) ## This is super quick, but evaluation is somewhere else...
+#     sendDEBUG("assigned plots in:", ((t2 <- proc.time()) - t1)[2]) ## This is super quick, but evaluation is somewhere else...
     ## Define the other team representation
     return(
       fluidRow(column(6,
