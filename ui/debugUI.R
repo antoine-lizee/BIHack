@@ -15,5 +15,5 @@ if (b_DEBUG) {
            verbatimTextOutput("DEBUG")
   )
 } else {
-  NULL
+  ""
 }
