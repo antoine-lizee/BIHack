@@ -72,7 +72,7 @@ shinyUI(navbarPage(
            fluidRow(
              column(4, offset = 1, h3("Browse hackers")),#,style = "vertical-align: bottom; display: table-cell;float: none;"),
              #              column(2, hr(), style = "vertical-align: bottom; display: table-cell;float: none;"),
-             column(4, offset = 3, h4("The database with all profiles is available", a(href = "https://www.dropbox.com/s/a9wmnne0ditzuxw/BIH_users.sqlite?dl=1",  "here")),style = "vertical-align: top;")#, style = "vertical-align: top; align:left; display: table-cell;float: none;")
+             column(4, offset = 3, h4("The database with all profiles is available", a(href = "https://www.dropbox.com/sh/e8v6r03jv1g7bl5/AAC8Cgs8Z3paC1AJ7tIHIWZ1a?dl=1",  "here")),style = "vertical-align: top;")#, style = "vertical-align: top; align:left; display: table-cell;float: none;")
            ),
            hr(),
            uiOutput("AllProfiles1")
@@ -82,21 +82,11 @@ shinyUI(navbarPage(
              column(4, offset = 1, h3("Choose some teammates")),
              column(3, offset = 2, checkboxInput(inputId = "b_FilterDatasets", "Filter for common datasets"))),
            hr(),
-           fluidRow(column(6,
-                           h4("Like-minded people", align = "center"),
-                           uiOutput("Team1")),
-                    column(6,
-                           h4("Complementary people", align = "center"),
-                           uiOutput("Team2"))
-           )
-           
+           uiOutput("OrderedProfiles")
   ),
   tabPanel("Remarks",
            includeHTML("www/remarks.html")
   ),
-  #   tabPanel("Debug",
-  #            uiOutput("DEBUGPanel")
-  #   ),
   source("ui/debugUI.R", local = TRUE)$value,
   hr(),
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),

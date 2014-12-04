@@ -27,16 +27,16 @@ ifelseFun <- function(vec, ifVec, fun, ...) {
 # ifelseFun(c(1,2,NA,3), "", is.null)
 # ifelseFun(NULL, "", is.null)
 
-sendDEBUG <- function(message) {
-  cat(sprintf("#### DEBUG: %s ############################\n", message), file = stderr())
+sendDEBUG <- function(...) {
+  cat(sprintf("#### DEBUG: %s ############################\n", paste(..., collapse = "\n")), file = stderr())
 }
 
 
 # Backend -----------------------------------------------------------------
 
 # Functions
-getCon <- function() {
-  RSQLite::dbConnect(RSQLite::SQLite(), userDBName, cache_size = 5000, synchronous = "full")
+getCon <- function(dbPath = userDBPath) {
+  RSQLite::dbConnect(RSQLite::SQLite(), dbPath, cache_size = 5000, synchronous = "full")
 }
 
 closeCon <- function(con) {

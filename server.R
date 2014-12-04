@@ -323,19 +323,34 @@ shinyServer(function(input, output, session) {
     return(getUserTable())
   })
   
-  output$AllProfiles1 <- renderUI({
-    users <- Users()
-    users <- users[order(users$Name),]
+  reactivePlots <- reactiveValues()
+  
+  createPlots <- function(users) {
     for (i_user in 1:nrow(users)) {
       local({
         user <- users[i_user, ]
-        output[[paste0("plot", user['Name'])]] <- renderPlot({
+        reactivePlots[[user[['Name']]]] <- renderPlot({
           par(mar = c(0,0,0,0))
           radarchart(df = plotData(user), axistype = 0, seg = 5, 
                      pcol = "black", pfcol = color(user), vlabel = c("", "", ""))
         })
       })
     }
+  }
+  
+  assignPlots <- function(plotPrefix) {
+    for (name in names(reactivePlots)) {
+      local({
+        output[[paste0(plotPrefix, name)]] <- reactivePlots[[name]]
+      })
+    }
+  }
+  
+  output$AllProfiles1 <- renderUI({
+    users <- Users()
+    users <- users[order(users$Name),]
+    createPlots(users)
+    assignPlots("plot")
     return(apply(users, 1, function(user) {
       fluidRow(fluidRow(
         column(2,
@@ -382,12 +397,13 @@ shinyServer(function(input, output, session) {
     })
   }
   
-  output$Team1 <- renderUI({
+  output$OrderedProfiles <- renderUI({
     if (input$s_Name == "") {
       output$Team2 <- renderUI(helpText("Load or Create your profile first", align = "center"))
-      return(helpText("Load or Create your profile first", align = "center"))
+      return(h4("** Load or Create your profile first **", align = "center"))
     }
     users <- Users()
+    users <- users[!users$Name %in% input$s_Name,]
     if (input$b_FilterDatasets) {
       myDatasets <- fromJSON(User()[["Datasets"]])
       users <- users[sapply(users$Datasets, function(udi) {
@@ -400,27 +416,22 @@ shinyServer(function(input, output, session) {
     users1 <- users[order(distances),]
     users2 <- users[order(-distances),]
     ## Define the graph outputs
-    for (i_user in 1:nrow(users)) {
-      local({
-        user <- users[i_user, ]
-        output[[paste0("plot1", user['Name'])]] <- renderPlot({
-          par(mar = c(0,0,0,0))
-          radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                     pcol = "black", pfcol = color(user), vlabel = c("", "", ""))
-        })
-        output[[paste0("plot2", user['Name'])]] <- renderPlot({
-          par(mar = c(0,0,0,0))
-          radarchart(df = plotData(user), axistype = 0, seg = 5, 
-                     pcol = "black", pfcol = color(user), vlabel = c("", "", ""))
-        })
-      })
-    }
+    t <- proc.time()
+    createPlots(users)
+    sendDEBUG("created plots in:", ((t1 <- proc.time()) - t)[2])
+    assignPlots("plot1")
+    assignPlots("plot2")
+    sendDEBUG("assigned plots in:", ((t2 <- proc.time()) - t1)[2]) ## This is super quick, but evaluation is somewhere else...
     ## Define the other team representation
-    output$Team2 <- renderUI({
-      return(createShortProfileUIs(users2, "plot2"))
-    })
-    return(createShortProfileUIs(users1, "plot1"))
-    
+    return(
+      fluidRow(column(6,
+                      h4("Like-minded people", align = "center"),
+                      createShortProfileUIs(users1, "plot1")),
+               column(6,
+                      h4("Complementary people", align = "center"),
+                      createShortProfileUIs(users2, "plot2"))
+      )
+    )
   })
   
   

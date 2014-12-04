@@ -4,8 +4,7 @@
 # Copyright Antoine Lizee 11/2014 antoine.lizee@gmail.com. See the license included in the project.
 
 
-
-{if (b_DEBUG) {
+if (b_DEBUG) {
   tabPanel("Debug",
            fluidRow(column(2,uiOutput("Console")),
                     column(10, 
@@ -17,4 +16,4 @@
   )
 } else {
   NULL
-}}
+}

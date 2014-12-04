@@ -21,7 +21,7 @@ library(rjson) # less powerfule but does a better job for quick conversions (wit
 
 # debuging
 if (b_DEBUG) {
-  options(shiny.trace=FALSE)
+  options(shiny.trace=TRUE)
   options(shiny.error=browser)
 }
 
@@ -57,7 +57,7 @@ user0 <- data.frame(Name = "USER0", Password = "765",
                     Involvement = 2,
                     stringsAsFactors = F)
 
-userDBName <- "data/BIH_users.sqlite"
+userDBPath <- "data/BIH_users.sqlite"
 userTableName <- "BIH_users"
 
 

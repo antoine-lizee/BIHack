@@ -1,27 +1,40 @@
-
  <h3>A few gotchas...</h3>
  <hr>
  <h4>Foreword: Security</h4>
  <p>No, this app is not secure, and is not meant to be. More on that later, but you should be aware that the "passwords" are not hashed at any point. Use the web-app and re-use the code responsibly.</p>
  <hr>
+ <h4>What is this supposed to be?</h4>
+ <p>The goal of this web-app is to have participants of a hackathon quickly share what (they think) their skills are, and efficiently look for other hackers.
+It is also a showcase of what can be done with <a ref = "http://shiny.rstudio.com/">Shiny</a> relatively quickly.</p>
  <h4>Why?</h4>
- <p>I took part in the - amazing - <a href = "http://www.bayesimpact.org/hack">Bayes Impact Hackathon</a> on November 15/16, and was a bit frustrated by the inability to team up efficiently if you didn't know personally some people going to the hackathon too.
-   I came up with this idea a couple of days before the start of the hackathon and hacked away a rougher version of this prototype for the d. The solution came too late (you need such a thing rougly one week <i>before</i> the hckathon itself to be efficiently used)</p>
-   <h4>How ?</h4>
-   <p>This also part of the why: I was playing with <a ref = "http://shiny.rstudio.com/">Shiny</a>, a sort of template language for quick web-development in R. I wanted to see if I could implement this idea of mine quickly using this new tool. It worked out pretty well, and well enough for me to want finishing it.</p>
- <h4>Potential Optimizations</h4>
- <p>The two panels that show the participants are insanely slow to load if there is 20+ people to show. This could be hugely improved by not creating the plots on the fly each time the page is loaded, since it is clearly the biggest time-eater of the operations.</p>
+ <p>I took part in the - amazing - <a href = "http://www.bayesimpact.org/hack">Bayes Impact Hackathon</a> on November 15/16, and was a bit frustrated by the inability to team up efficiently if you didn't know personally some people going there.
+   I came up with the idea of an open "hacker profiler" a couple of days before the start of the hackathon and hacked away a rougher version of this prototype that I quickly presented at the beginning of the hackathon. 
+   The solution came too late to be really useful this time, but many people showed interest in it and asked me to share it, so I went back clean up things, and here we are!</p>
+ <h4>How ?</h4>
+ <p>This also part of the why: I was playing with <a ref = "http://shiny.rstudio.com/">Shiny</a>, a template language for quick web-development in R. 
+   I wanted to see if I could implement what I had in mind using this new tool. It looked well quickly enough that I wanted to create a user-ready prototype of it.</p>
+ <h5>My experience with Shiny</h5>
+<p>Below is a quick - & honest - sketch on how it went:</p>
+<img src = "progressGraph.png">
+<p>As you can see, <strong>I've not always been lightning fast</strong>. It comes from two things: the first being that I am (or was) not so much of an expert in Shiny, and my advanced R knowledge and basic Shiny experience was challenged by some part of the project.
+  Time here includes learning & figuring out stuff. Then, there is the fact that Shiny is pretty bad at doing some things like persistence (I had to develop a "backend" myself) and <em>debugging.</em> 
+  This last thing is very important, as sometimes development speed is really, really, decreased because debugging tools are non-existent or not straightforward to use. This can be a problem for the development of applications whose complexity lies not only in the ported R code.</p>
+<p>Yet, <strong>it is possible</strong>: it might not be the perfect framework to develop such a webApp, but at least it <em>is</em> doable in Shiny. I am glad to know that anything I want to quickly share with friends & colleagues can be done so easily, without touching any classic web-tool. 
+  In addition, Shiny is quite intensively developped currently, and will only get better.</p>
+ <h4>Future development</h4>
+ <p>I'd like to develop new "Ry" features that can quickly been implemented on the top of the existing data, like a summary pane describing the population of hackers.</p>
+ <p>More on the engineering side, the two panels that show the participants are insanely slow to load if there is 40+ people to show. This could be hugely improved by not creating the plots on the fly each time the page is loaded, but instead creating them at user creation or update.</p>
  <h4>More on Security</h4>
- <p>The app is absolutely not secure, but it isnt the point. The data that participants share here is not meant to be private, and there is enough emphasis at password creation to not choose your favorite one.
-   If one wanted to secure the app, though here are the few steps I isolated:</p>
+ <p>The app is absolutely not secure, but it isn't the point. The data that participants share here is not meant to be private, and there is enough emphasis at password creation to not choose your favorite one.
+   If one wanted to secure the app, here are the few necessary steps that should be implemented <em> altogether</em> :</p>
 
 <dl class="dl-horizontal">
     <dt>Password field</dt>
-    <dd>I implemented it out of curiosity. (See the file globals.R, <code>passwordInput()</code> is a modified version of <code>shiny::textInput()</code>) But again, the whole point is to make the user aware of the absence of security, hence I left the classic <code>textInput()</code> in place.</dd>
+    <dd>I implemented it out of curiosity, so it's virtually a 10 sec swap. (See the file globals.R, <code>passwordInput()</code> is a modified version of <code>shiny::textInput()</code>) But again, the whole point is to make the user aware of the absence of security, hence I left the classic <code>textInput()</code> in place.</dd>
     <dt>Password salting+hashing</dt>
-    <dd>Create a random salt at user creation, store it in the data base. Store the hash of (password + salt). Everything could be done in R (the 'scrypt' package provides a good, simple toolbox for that).</dd>
+    <dd>Create a random salt at user creation, store it in the data base. Store the hash of (password + salt). Everything could be done in R pretty quickly (the 'scrypt' package provides a good, simple toolbox for that).</dd>
     <dt>Implement SSL over https</dt>
     <dd>The stuff above is useless without this. It might be the longer part depending on your current setup.</dd>
-    <dt>Prevent dl of password fields</dt>
-    <dd>Well, that's obvious. You can currently download the whole database as a sqlite file, but Shiny lets you create a download feature easily that would give you a .csv with whatever field you choose.</dd>
+    <dt>Prevent dl of passwords</dt>
+    <dd>You can currently download the whole database as a sqlite file, but Shiny lets you create a download feature easily that would give you a .csv with whatever field you choose.</dd>
 </dl>
