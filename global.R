@@ -58,6 +58,7 @@ user0 <- data.frame(Name = "USER0", Password = "765",
                     stringsAsFactors = F)
 
 userDBPath <- "data/BIH_users.sqlite"
+dir.create(path = "data", showWarnings = F)
 userTableName <- "BIH_users"
 
 
