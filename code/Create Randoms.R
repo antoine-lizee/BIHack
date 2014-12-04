@@ -7,7 +7,7 @@
 
 source("global.R")
 library(jsonlite)
-randomNames <- fromJSON('http://api.randomuser.me/?results=40')
+randomNames <- fromJSON('http://api.randomuser.me/?results=25')
 NR <- nrow(randomNames$results)
 detach("package:jsonlite")
 
