@@ -28,7 +28,7 @@ if (b_DEBUG) {
 # Static info -------------------------------------------------------------
 
 listOfSkills <- list(BE = c("Python", "C#", "C++", "C", "go", "java", "Hadoop", "sysops", "Node.js", "PHP", "Django", "SQL", "noSQL", "ruby", "ROR"),
-                     FE = c("js", "jQuery", "CSS", "D3S", "Shiny", "Objective-C", "Android", "HTML", "HTML5", "Flash"),
+                     FE = c("js", "jQuery", "CSS", "D3.js", "Shiny", "Objective-C", "Android", "HTML", "HTML5", "Flash"),
                      DS = c("R", "Python", "Julia", "ML", "DataVis", "Algorithmics", "Stats", "MATLAB"))
 
 listOfDatasets <- list("Education" = c("01 - Help Teachers Get What They Need", 
