@@ -252,7 +252,7 @@ shinyServer(function(input, output, session) {
             createUser(isolate(User()))
             output$LoginMessage <- renderText("User Created")
             output$LoginAction <- renderUI(loggedInUI)
-            updateTextInput("s_Password", value = "")
+            updateTextInput(session, "s_Password", value = "")
           }, error = function(e) {
             output$LoginMessage <- renderText(paste("ERROR: ", e$message))
           })
@@ -281,6 +281,7 @@ shinyServer(function(input, output, session) {
         },
         error = function(e) {
           output$LoginMessage <- renderText(paste("ERROR:", e$message))
+          if (b_DEBUG) stop(e)
         })
       }
     }
@@ -292,9 +293,9 @@ shinyServer(function(input, output, session) {
       modifyUserBackend( "Please provide the matching password to update your Profile.",
                          function(user) {
                            # Update the user data
-                           updateUser(User())
+                           updateUser(isolate(User()))
                            output$LoginMessage <- renderText("User data updated.")
-                           updateTextInput("s_Password", value = "")
+                           updateTextInput(session, "s_Password", value = "")
                          })
     }  
   })
@@ -315,13 +316,6 @@ shinyServer(function(input, output, session) {
   
   
   ### All Profiles pane ################################################
-  
-  Users <- reactive({
-    input$b_Create
-    input$b_Save
-    input$b_Delete
-    return(getUserTable())
-  })
   
   reactivePlots <- reactiveValues()
   
@@ -346,10 +340,20 @@ shinyServer(function(input, output, session) {
     }
   }
   
+  Users <- reactive({
+    input$b_Create
+    input$b_Save
+    input$b_Delete
+    createPlots(users)
+    return(getUserTable())
+  })
+  
   output$AllProfiles1 <- renderUI({
     users <- Users()
+    if (nrow(users) == 0) {
+      return(h4("Nothing to show yet..."))
+    }
     users <- users[order(users$Name),]
-    createPlots(users)
     assignPlots("plot")
     return(apply(users, 1, function(user) {
       fluidRow(fluidRow(
@@ -403,6 +407,9 @@ shinyServer(function(input, output, session) {
       return(h4("** Load or Create your profile first **", align = "center"))
     }
     users <- Users()
+    if (nrow(users) == 0) {
+      return(h4("Nothing to show yet..."))
+    }
     users <- users[!users$Name %in% input$s_Name,]
     if (input$b_FilterDatasets) {
       myDatasets <- fromJSON(User()[["Datasets"]])
