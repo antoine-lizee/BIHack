@@ -344,8 +344,9 @@ shinyServer(function(input, output, session) {
     input$b_Create
     input$b_Save
     input$b_Delete
+    users <- getUserTable()
     createPlots(users)
-    return(getUserTable())
+    return(users)
   })
   
   output$AllProfiles1 <- renderUI({
