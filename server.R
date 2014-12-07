@@ -170,11 +170,9 @@ shinyServer(function(input, output, session) {
       return(helpText("Loading..."))
     } else {
       
-      if (input$s_Name == "") { #Listen and check for the name inbox
+      if (is.null(input$s_Name) || input$s_Name == "") { #Listen and check for the name inbox
         return(
           NULL)
-#           wellPanel(
-#             p("Choose a login to load the corresponding profile or type a login to create your profile.")))
       }
       
       # Check if user is in database

@@ -60,7 +60,7 @@ shinyUI(navbarPage(
                         column(8,
                                style = "position:relative",
                                plotOutput("radarPlot"),
-                               div(actionButton("b_Clear", label = "Clear Dashboard", icon = icon("eraser")), style = "position:absolute; left:2px; top:2px")), #fa-times-circle / fa-close (or fa-remove or fa-times) / 
+                               div(actionButton("b_Clear", label = "Reset Dashboard", icon = icon("eraser")), style = "position:absolute; left:2px; top:2px")), #fa-times-circle / fa-close (or fa-remove or fa-times) / 
                         column(4,
                                p("Your Profie is:", align = "center"),
                                h2(textOutput("Profile", inline = TRUE), align = "center"),
