@@ -1,22 +1,35 @@
-BIHack
+Hackathoner Profiler
 ======
 
-Shiny app for gathering simple information about the participants of a hackathon (initially the [Bayes Impact Hackathon] [1])
+Shiny app for gathering simple information about the participants of a hackathon (initially the [Bayes Impact Hackathon] [1]).
 
-# Demo
+### Demo
 
 Go to http://hackprofiler.alizee.io
 
-# Install & Run
+### Install & Run
 
 In R, you'll need to install the following dependencies: 
-`install.packages(c("shiny", "RSQLite", "fmsb", "rjson", "jsonlite"))`
-before launching the app with either:
-`runGithub()`
-or cloning the repository and running
-`runApp()`
+```
+install.packages(c("shiny", "RSQLite", "fmsb", "rjson", "jsonlite"))
+```
 
-# More info
+Then launch the app from R with either:
+```
+library(shiny)
+runGithub("antoine-lizee/BIHack")
+```
+
+or cloning the repository (`git clone ...`) and running the downloaded code in its folder:
+```
+library(shiny)
+runApp()
+```
+
+If you want to investigate further, turn on the `b_DEBUG` switch in the `global.R` file.
+
+
+### More info
 
 Have a look at the "Remarks" pane of the app to have more context on the what, why and how of this piece of code.
 
