@@ -364,14 +364,14 @@ shinyServer(function(input, output, session) {
         column(1,
                plotOutput(paste0("plot", user['Name']), height = "80px")),
         column(4,
-               withTags(div(class='row-fluid',
-                            div(class = 'span2', p("Datasets:")),
+#                withTags(div(style="text-align:center",#class='row-fluid',
+#                             div(class = 'span2', "Datasets: "),
                             lapply(unname(substr(unlist(listOfDatasets),1,2)),
                                    function(datasetName){
-                                     div(class='span2', checkboxInput(inputId = "simOption", label = datasetName, 
-                                                                      value=(datasetName %in% substr(fromJSON(user[["Datasets"]]), 1, 2))))
+                                     isSelected = datasetName %in% substr(fromJSON(user[["Datasets"]]), 1, 2)
+                                     div(class='span2', style = "margin-left:0px", p(icon(name = ifelse(isSelected, "check-circle", "circle-o")), datasetName))
                                    } )
-               ))),
+               ),
         column(5,
                p(paste("BE:", paste(fromJSON(user[["BETags"]]), collapse = " - "))),
                p(paste("FE:", paste(fromJSON(user[["FETags"]]), collapse = " - "))),
@@ -427,7 +427,7 @@ shinyServer(function(input, output, session) {
     users2 <- users[order(-distances),]
     ## Define the graph outputs
 #     t <- proc.time()
-    createPlots(users)
+#     createPlots(users)
 #     sendDEBUG("created plots in:", ((t1 <- proc.time()) - t)[2])
     assignPlots("plot1")
     assignPlots("plot2")
