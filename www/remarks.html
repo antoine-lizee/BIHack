@@ -20,7 +20,7 @@ It is also a showcase of what can be done with <a ref = "http://shiny.rstudio.co
   Time here includes learning & figuring out stuff + sysop fun. Second, Shiny is pretty bad at doing some things like persistence (I had to develop a simplistic "backend" myself) and <em>debugging.</em> 
   This last point is crucial, as sometimes development speed is really, really, decreased because debugging tools are non-existent or not straightforward to use. This can be a problem for the development of applications whose complexity lies not only in the ported R code.</p>
 <p>Yet, <strong>it is possible</strong>: it might not be the perfect framework to develop such a webApp, but at least it <em>is</em> doable in Shiny. I am glad to know that anything I want to quickly share with friends & colleagues can be done so easily, without touching any classic web-tool. 
-  In addition, Shiny is quite intensively developped currently, and will only get better.</p>
+  In addition, Shiny is quite intensively developed currently, and will only get better.</p>
  <h4>Future development (a.k.a. if I had unlimited time)</h4>
  <p>I'd like to develop more "Ry" features that can quickly been implemented on the top of the existing data, like a summary pane describing the population of registered hackers.</p>
  <p>More on the engineering side, the two panels that show the participants are insanely slow to load if there is 40+ people to show. This could be hugely improved by not creating the plots on the fly each time the page is loaded, but instead creating them at user creation or update and store them.</p>
@@ -31,7 +31,7 @@ It is also a showcase of what can be done with <a ref = "http://shiny.rstudio.co
 
 <dl class="dl-horizontal">
     <dt>Password field</dt>
-    <dd>I implemented it out of curiosity, so it's virtually a 10 sec swap. (See the file globals.R, <code>passwordInput()</code> is a modified version of <code>shiny::textInput()</code>). In order to make the user aware of the absence of security, I left the classic <code>textInput()</code> in place for the current version.</dd>
+    <dd>I implemented it out of curiosity, so it's virtually a 10 sec swap. (See the file global.R, <code>passwordInput()</code> is a modified version of <code>shiny::textInput()</code>). In order to make the user aware of the absence of security, I left the classic <code>textInput()</code> in place for the current version.</dd>
     <dt>Password salting+hashing</dt>
     <dd>Create a random salt at user creation, store it in the database. Store the hash of (password + salt). Everything could be done in R pretty quickly (the 'scrypt' package provides a good, simple toolbox for that).</dd>
     <dt>Implement SSL over https</dt>

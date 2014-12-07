@@ -19,10 +19,15 @@ shinyUI(navbarPage(
                       hr(),
                       wellPanel(
                         h3("Login Info", align = "center"),
-                        uiOutput("LoginAction"),
                         uiOutput("LoginField"), 
+                        conditionalPanel(
+                          condition = "typeof input.s_Name !== 'undefined' & input.s_Name != ''",
+                          wellPanel(
+                            textInput(inputId = "s_Password", label = "Password", ""),
+                            uiOutput("LoginAction")
+                          )),
                         #                         helpText(paste0("'Password'")),# that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
-                        textInput(inputId = "s_Password", label = "Password", ""), #value = paste0(sample(9,4), collapse = "")),
+                        #                         textInput(inputId = "s_Password", label = "Password", ""), #value = paste0(sample(9,4), collapse = "")),
                         hr(),
                         helpText("Optional information to identify you better"),
                         textInput(inputId = "s_FirstName", label = "First Name", ""),
@@ -87,9 +92,9 @@ shinyUI(navbarPage(
   tabPanel("Remarks",
            includeHTML("www/remarks.html")
   ),
+  source("ui/debugUI.R", local = TRUE)$value,
   hr(),
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
-  source("ui/debugUI.R", local = TRUE)$value,
   
   #### CSS & additional scripts ###########
   includeCSS("www/quickPatches.css")

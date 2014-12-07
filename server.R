@@ -133,7 +133,7 @@ shinyServer(function(input, output, session) {
   # Login selectize
   output$LoginField <- renderUI({
     #     sendDEBUG("Rendering login field")
-    selectizeInput(inputId = "s_Name", label = "Select or Type a login below:", 
+    selectizeInput(inputId = "s_Name", label = "Create a profile by typing a login into the box below or select an existing one to load the corresponding profile:", 
                    choices = c("Login" = "", getListOfUsers()), multiple = FALSE, 
                    options = list(create = "true", createOnBlur = "true", persist = "false", addPrecedence = "true"))
   })
@@ -147,14 +147,14 @@ shinyServer(function(input, output, session) {
     c("A few hours", "Half of the time", "I'll be out a couple of hours", "I'll go home to rest at night", "I don't intend to sleep")[input$i_Involvement]
   })
   
-  loggedInUI <- wellPanel(
+  loggedInUI <- div(
     p(textOutput("LoginMessage", inline = TRUE), align = "center"),
     fluidRow(
       column(6, actionButton("b_Update", "Save Changes")),
       column(6, actionButton("b_Delete", "Delete Profile"))
     ))
   
-  firstLoggingUI <- wellPanel(
+  firstLoggingUI <- div(
     p(textOutput("LoginMessage"), align = "center"),
     fluidRow(
       column(6, actionButton("b_Create", "Save Profile"))
@@ -172,8 +172,9 @@ shinyServer(function(input, output, session) {
       
       if (input$s_Name == "") { #Listen and check for the name inbox
         return(
-          wellPanel(
-            p("Choose a login to load the corresponding profile or type a login to create your profile.")))
+          NULL)
+#           wellPanel(
+#             p("Choose a login to load the corresponding profile or type a login to create your profile.")))
       }
       
       # Check if user is in database
@@ -196,11 +197,10 @@ shinyServer(function(input, output, session) {
         return(loggedInUI)  
       } else {
         # Check if the password field is empty
-        if (input$s_Password == "") {
+        if (is.null(input$s_Password) || input$s_Password == "") {
           return(
-            wellPanel(
               p("Create a weak, non-important password to be sure nobody edits your profile by mistake")
-            ))
+            )
         } else {
           output$LoginMessage <- renderText("Don't forget to save your profile!")
           # Reset personal info
@@ -254,6 +254,7 @@ shinyServer(function(input, output, session) {
             createUser(isolate(User()))
             output$LoginMessage <- renderText("User Created")
             output$LoginAction <- renderUI(loggedInUI)
+            updateTextInput("s_Password", value = "")
           }, error = function(e) {
             output$LoginMessage <- renderText(paste("ERROR: ", e$message))
           })
@@ -295,6 +296,7 @@ shinyServer(function(input, output, session) {
                            # Update the user data
                            updateUser(User())
                            output$LoginMessage <- renderText("User data updated.")
+                           updateTextInput("s_Password", value = "")
                          })
     }  
   })
