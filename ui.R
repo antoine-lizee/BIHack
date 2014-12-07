@@ -58,7 +58,9 @@ shinyUI(navbarPage(
                       hr(),
                       fluidRow(
                         column(8,
-                               plotOutput("radarPlot")),
+                               style = "position:relative",
+                               plotOutput("radarPlot"),
+                               div(actionButton("b_Clear", label = "Clear Dashboard", icon = icon("eraser")), style = "position:absolute; left:2px; top:2px")), #fa-times-circle / fa-close (or fa-remove or fa-times) / 
                         column(4,
                                p("Your Profie is:", align = "center"),
                                h2(textOutput("Profile", inline = TRUE), align = "center"),
