@@ -92,30 +92,18 @@ shinyUI(navbarPage(
            uiOutput("OrderedProfiles")
   ),
   tabPanel("More Information",
-           includeHTML("www/remarks.html"),
-           HTML("<script>$('#linkToRemarks').click(function() {
-tabs = $('.tabbable .nav.nav-tabs li')
-tabs.each(function() {
-$(this).removeClass('active')
-})
-$(tabs[1]).addClass('active')
-tabsContents = $('.tabbable .tab-content .tab-pane')
-tabsContents.each(function() {
-$(this).removeClass('active')
-})
-$(tabsContents[1]).addClass('active')
-$('#Remarks').trigger('change').trigger('shown');
-})</script>
-")
+           includeHTML("www/remarks.html")
   ),
   source("ui/debugUI.R", local = TRUE)$value,
   hr(),
-  p(span(id = "linkToRemarks", a("More Information"))), # , href = "#Remarks"
-  p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
+  p("Created with Shiny, love and pain by Antoine Lizee -", a("Github", href = "https://github.com/antoine-lizee/BIHack"), "- ", 
+    span(id = "linkToRemarks", a("More Information", href = "#Information")), 
+    align = "right"),
   
   #### CSS & additional scripts ###########
-  includeCSS("www/quickPatches.css")
-  #   includeScript("www/linkToTab.js")
+  includeCSS("www/quickPatches.css"),
+#   includeScript("www/linkTab.js"),
+  includeScript("www/linkToTab.js")
 ))
 
 
