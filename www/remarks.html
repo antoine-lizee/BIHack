@@ -1,4 +1,4 @@
- <h3>A few gotchas...</h3>
+ <h3 id="Remarks">A few gotchas...</h3>
  <hr>
  <h4>Foreword: Security</h4>
  <p>No, this app is not secure, and is not meant to be. More on that later, but you should be aware that the "passwords" are not hashed at any point. Use the web-app and re-use the code responsibly.</p>
@@ -19,12 +19,12 @@ It is also a showcase of what can be done with <a ref = "http://shiny.rstudio.co
 <p>As you can see, <strong>I've not always been lightning fast</strong>. It comes from two very different issues. First, I am (or was) not so much of an expert in Shiny, so my advanced R knowledge and basic Shiny experience were challenged by some parts of the project.
   Time here includes learning & figuring out stuff + sysop fun. Second, Shiny is pretty bad at doing some things like persistence (I had to develop a simplistic "backend" myself) and <em>debugging.</em> 
   This last point is crucial, as sometimes development speed is really, really, decreased because debugging tools are non-existent or not straightforward to use. This can be a problem for the development of applications whose complexity lies not only in the ported R code.</p>
-<p>Yet, <strong>it is possible</strong>: it might not be the perfect framework to develop such a webApp, but at least it <em>is</em> doable in Shiny. I am glad to know that anything I want to quickly share with friends & colleagues can be done so easily, without touching any classic web-tool. 
+<p>Yet, <strong>it is possible</strong>: Shiny is not the perfect framework to develop such a webApp (and is not meant to be), still it <em>is</em> doable. I am glad to know that anything I want to quickly share with friends & colleagues can be done quite easily, without touching any classic web-tool.
   In addition, Shiny is quite intensively developed currently, and will only get better.</p>
  <h4>Future development (a.k.a. if I had unlimited time)</h4>
  <p>I'd like to develop more "Ry" features that can quickly been implemented in R on the top of the existing data, like a summary pane with graphs describing the population of registered hackers.</p>
- <p>More on the engineering side, the two panels that show the participants are insanely slow to load if there is 40+ people to show. This could be hugely improved by not creating the plots on the fly each time the page is loaded, but instead creating them at user creation or update and store them.</p>
- <p>Design is good enough thanks to the bootstrap theme, but I still find a lot of things ugly. Visualizations in particular could be more sleek and interactive.</p>
+ <p>More on the engineering side, the two panels that show the participants are pretty slow to load if there is 40+ people to show. This could be improved by not creating the plots on the fly each time the page is loaded, but instead creating them at user creation & update as static images and store them.</p>
+ <p>Design is good enough thanks to the bootstrap theme, but I still think things could be sleeker. Visualizations in particular could be more sleek and interactive.</p>
  <h4>More on Security</h4>
  <p>The app is absolutely not secure, but it isn't the point. The data that participants share here is not meant to be private, and there is enough emphasis at password creation to not choose your favorite one.
    If one wanted to secure the app, here are the few necessary steps that should be implemented <em> altogether</em> :</p>
@@ -37,5 +37,5 @@ It is also a showcase of what can be done with <a ref = "http://shiny.rstudio.co
     <dt>Implement SSL over https</dt>
     <dd>The stuff above is useless without SSL. Integrating it might be the longer part depending on your current setup.</dd>
     <dt>Sharing data w/out passwords</dt>
-    <dd>You can currently download the whole database as a sqlite file, but Shiny lets you create a download feature easily that would give you a .csv with whatever field you choose - and without the passwords...</dd>
+    <dd>Anybody can currently download the whole database as a sqlite file, but Shiny lets you create a download feature easily that would give you a .csv with whatever field you choose - and without the password hashes...</dd>
 </dl>

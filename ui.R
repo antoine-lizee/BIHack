@@ -9,7 +9,7 @@
 library(shiny)
 
 shinyUI(navbarPage(
-  "The Hackathoner Profiler",
+  "The Hacker Profiler",
   tabPanel("Your Profile",
            fluidPage(
              fluidRow(
@@ -23,7 +23,7 @@ shinyUI(navbarPage(
                         conditionalPanel(
                           condition = "typeof input.s_Name !== 'undefined' & input.s_Name != ''",
                           wellPanel(
-                            textInput(inputId = "s_Password", label = "Password", ""),
+                            textInput(inputId = "s_Password", label = "'Password'", ""),
                             uiOutput("LoginAction")
                           )),
                         #                         helpText(paste0("'Password'")),# that you will have to remember. Like '", paste(sample(10,4), collapse = ""), "' for instance.")),
@@ -91,15 +91,31 @@ shinyUI(navbarPage(
            hr(),
            uiOutput("OrderedProfiles")
   ),
-  tabPanel("Remarks",
-           includeHTML("www/remarks.html")
+  tabPanel("More Information",
+           includeHTML("www/remarks.html"),
+           HTML("<script>$('#linkToRemarks').click(function() {
+tabs = $('.tabbable .nav.nav-tabs li')
+tabs.each(function() {
+$(this).removeClass('active')
+})
+$(tabs[1]).addClass('active')
+tabsContents = $('.tabbable .tab-content .tab-pane')
+tabsContents.each(function() {
+$(this).removeClass('active')
+})
+$(tabsContents[1]).addClass('active')
+$('#Remarks').trigger('change').trigger('shown');
+})</script>
+")
   ),
   source("ui/debugUI.R", local = TRUE)$value,
   hr(),
+  p(span(id = "linkToRemarks", a("More Information"))), # , href = "#Remarks"
   p("Created with Shiny, love and pain by Antoine Lizee ", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"), align = "right"),
   
   #### CSS & additional scripts ###########
   includeCSS("www/quickPatches.css")
+  #   includeScript("www/linkToTab.js")
 ))
 
 
