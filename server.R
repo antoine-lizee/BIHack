@@ -228,7 +228,6 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, inputId = "s_DS", selected = "", choices = c("keyword..."="", listOfSkills[["DS"]]))
     updateSelectInput(session, inputId = "s_BE", selected = "", choices = c("keyword..."="", listOfSkills[["BE"]]))
     updateSelectInput(session, inputId = "s_FE", selected = "", choices = c("keyword..."="", listOfSkills[["FE"]]))
-    #     output$LoginMessage <- renderText("Dashboard Cleared...")
   })
   
   # Listener for profile creation
@@ -403,7 +402,7 @@ shinyServer(function(input, output, session) {
   }
   
   output$OrderedProfiles <- renderUI({
-    if (input$s_Name == "") {
+    if (is.null(input$s_Name) || input$s_Name == "") {
       output$Team2 <- renderUI(helpText("Load or Create your profile first", align = "center"))
       return(h4("** Load or Create your profile first **", align = "center"))
     }

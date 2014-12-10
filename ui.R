@@ -96,13 +96,13 @@ shinyUI(navbarPage(
   ),
   source("ui/debugUI.R", local = TRUE)$value,
   hr(),
-  p("Created with Shiny, love and pain by Antoine Lizee -", a("Github", href = "https://github.com/antoine-lizee/BIHack"), "- ", 
-    span(id = "linkToRemarks", a("More Information", href = "#Information")), 
+  p("Created with Shiny, love and pain by Antoine Lizee", a("(Github)", href = "https://github.com/antoine-lizee/BIHack"),# "- ", 
+    #     span(id = "linkToRemarks", a("More Information", href = "#Information")), 
     align = "right"),
   
   #### CSS & additional scripts ###########
   includeCSS("www/quickPatches.css"),
-#   includeScript("www/linkTab.js"),
+  #   includeScript("www/linkTab.js"),
   includeScript("www/linkToTab.js")
 ))
 
