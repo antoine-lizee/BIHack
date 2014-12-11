@@ -31,6 +31,7 @@ If you want to investigate further, turn on the `b_DEBUG` switch in the `global.
 
 ### More info
 
-Have a look at the "More Information" pane of the app to have more context on the what, why and how of this piece of code.
+Have a look at the ["More Information"] [2] pane of the app to have more context on the what, why and how of this piece of code.
 
 [1]: http://www.bayesimpact.org/hack
+[2]: http://hackprofiler.alizee.io/#Information
