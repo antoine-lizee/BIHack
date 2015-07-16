@@ -17,7 +17,7 @@ install.packages(c("shiny", "RSQLite", "fmsb", "rjson", "jsonlite"))
 Then launch the app from R with either:
 ```
 library(shiny)
-runGithub("antoine-lizee/BIHack")
+runGitHub("antoine-lizee/BIHack")
 ```
 
 or cloning the repository (`git clone ...`) and running the downloaded code in its folder:
